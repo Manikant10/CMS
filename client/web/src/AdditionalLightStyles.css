@@ -1,0 +1,589 @@
+/* Additional Light Theme Styles for Enhanced Components */
+
+/* Attendance Management */
+.attendance-management .attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.summary-card h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.summary-card .numbers {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.summary-card .conducted {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.summary-card .present {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.summary-card .total {
+  font-size: 1.2rem;
+  color: #6c757d;
+}
+
+.summary-card .percentage {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.summary-card p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.attendance-form {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.attendance-form h4 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+}
+
+.attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.attendance-item {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.roll-no {
+  font-weight: 600;
+  color: #007bff;
+  font-size: 0.9rem;
+}
+
+.name {
+  color: #333;
+  font-weight: 500;
+}
+
+.attendance-options {
+  display: flex;
+  gap: 1rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+}
+
+.attendance-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+/* Fee Management */
+.fee-summary-card {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: #ffffff;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.fee-summary-card h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.fee-summary-card .amount {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.fee-status-details {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.fee-status-details .label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.fee-status-details .value {
+  font-weight: bold;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+}
+
+.percentage {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.fees-details h4 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.fees-list .fee-item {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.fees-list .fee-item.pending {
+  border-left: 4px solid #ffc107;
+}
+
+.fees-list .fee-item.paid {
+  border-left: 4px solid #28a745;
+}
+
+.fee-amounts {
+  display: flex;
+  gap: 1rem;
+  margin: 0.5rem 0;
+}
+
+.fee-amounts .total {
+  color: #333;
+  font-weight: bold;
+}
+
+.fee-amounts .paid {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.fee-amounts .remaining {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.payment-history h4 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.history-list .payment-item {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.payment-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.no-fee-data {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+/* Admin Fee Management */
+.fees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.fee-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.fee-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.fee-header {
+  margin-bottom: 1rem;
+}
+
+.fee-header h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.fee-header .roll-no,
+.fee-header .semester {
+  display: inline-block;
+  background: #f8f9fa;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-right: 0.5rem;
+}
+
+.fee-details {
+  margin-bottom: 1.5rem;
+}
+
+.fee-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.fee-summary .label {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.fee-summary .amount {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.fee-summary .amount.paid {
+  color: #28a745;
+}
+
+.fee-summary .amount.remaining {
+  color: #dc3545;
+}
+
+.fee-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.payment-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.payment-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.current-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.current-status span {
+  font-weight: 600;
+}
+
+/* Grades Management */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.gpa-card, .credits-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.gpa-card h4, .credits-card h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+}
+
+.gpa-card .gpa, .credits-card .credits {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+}
+
+.gpa-card .scale, .credits-card .scale {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.grades-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.grades-table th,
+.grades-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.grades-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.grade-badge {
+  background: #007bff;
+  color: #ffffff;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Assignments Management */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.assignment-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.assignment-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.assignment-header h4 {
+  margin: 0;
+  color: #333;
+}
+
+.assignment-details p {
+  margin: 0.3rem 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.submission-stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.submission-stats .stat {
+  text-align: center;
+}
+
+.submission-stats .count {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.submission-stats .label {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.assignment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Attendance Bar */
+.attendance-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.attendance-fill {
+  height: 8px;
+  background: linear-gradient(90deg, #28a745, #20c997);
+  border-radius: 4px;
+  transition: width 1s ease-in-out;
+  min-width: 60px;
+}
+
+.attendance-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+  .attendance-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .grades-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .library-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .assignments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .attendance-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .attendance-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .attendance-options {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .book-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .book-details {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .assignment-card {
+    padding: 1rem;
+  }
+  
+  .assignment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .submission-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .submission-stats .stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

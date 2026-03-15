@@ -25,7 +25,7 @@ router.put('/profile', protect, authorize('admin'), async (req, res) => {
         }
         
         // Verify current password (mock validation)
-        if (adminUser.email === 'Admin.bit' && currentPassword !== 'Bitadmin@1122') {
+        if (adminUser.email === 'Admin123@bit.edu' && currentPassword !== 'Bitadmin@1122') {
           return res.status(400).json({ success: false, message: 'Current password is incorrect' });
         }
         

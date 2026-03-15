@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "BIT CMS",
+  "name": "Bhagwant Institute of Technology - College Management System",
+  "description": "Complete college management system for students, faculty, and administrators",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +9,85 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "bit-cms-icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "logo512.png",
+      "src": "bit-cms-icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "apple touch icon"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  "categories": ["education", "productivity", "business"],
+  "lang": "en",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "BIT CMS Dashboard on Desktop"
+    },
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "BIT CMS Dashboard on Mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "shortcut-dashboard.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "short_name": "Courses",
+      "description": "View courses",
+      "url": "/courses",
+      "icons": [
+        {
+          "src": "shortcut-courses.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Fees",
+      "short_name": "Fees",
+      "description": "View fee status",
+      "url": "/fees",
+      "icons": [
+        {
+          "src": "shortcut-fees.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
 }

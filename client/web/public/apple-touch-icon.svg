@@ -1,0 +1,24 @@
+
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="180" height="180" fill="#007bff" rx="18"/>
+  
+  <!-- BIT Text -->
+  <text x="50%" y="50%" 
+        font-family="Arial, sans-serif" 
+        font-size="45" 
+        font-weight="bold" 
+        fill="white" 
+        text-anchor="middle" 
+        dominant-baseline="middle">
+    BIT
+  </text>
+  
+  <!-- Building Icon -->
+  <g transform="translate(18, 108)">
+    <rect width="144" height="54" fill="white" opacity="0.3" rx="3.6"/>
+    <rect x="18" y="9" width="27" height="36" fill="white" opacity="0.5"/>
+    <rect x="54" y="9" width="27" height="36" fill="white" opacity="0.5"/>
+    <rect x="90" y="9" width="27" height="36" fill="white" opacity="0.5"/>
+  </g>
+</svg>

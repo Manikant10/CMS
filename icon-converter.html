@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIT CMS Icon Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #fff;
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 1rem;
+        }
+        
+        .upload-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .preview {
+            display: none;
+            margin: 2rem 0;
+        }
+        
+        .preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            margin: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .icon-preview {
+            display: inline-block;
+            margin: 1rem;
+            text-align: center;
+        }
+        
+        .icon-preview img {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+        }
+        
+        .icon-preview label {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .instructions ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .instructions li {
+            margin: 0.5rem 0;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+        }
+        
+        .status.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 BIT CMS Icon Converter</h1>
+        
+        <div class="instructions">
+            <h3>📱 How to Use This Tool</h3>
+            <ol>
+                <li>Upload your custom image (your uploaded BIT image)</li>
+                <li>Preview the generated icons in different sizes</li>
+                <li>Download the icon files</li>
+                <li>Replace the files in <code>client/web/public/</code></li>
+                <li>Restart your development server</li>
+            </ol>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <h3>📤 Upload Your Image</h3>
+            <p>Drag and drop your image here or click to browse</p>
+            <input type="file" id="fileInput" accept="image/*">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Choose Image
+            </button>
+        </div>
+        
+        <div class="preview" id="preview">
+            <h3>📊 Generated Icons</h3>
+            <div id="originalPreview"></div>
+            <div id="iconPreviews"></div>
+            <div id="downloadSection"></div>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const originalPreview = document.getElementById('originalPreview');
+        const iconPreviews = document.getElementById('iconPreviews');
+        const downloadSection = document.getElementById('downloadSection');
+        const status = document.getElementById('status');
+        
+        let uploadedImage = null;
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showStatus('Please upload an image file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage = new Image();
+                uploadedImage.onload = () => {
+                    generateIcons();
+                    showStatus('Image loaded successfully!', 'success');
+                };
+                uploadedImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function generateIcons() {
+            if (!uploadedImage) return;
+            
+            // Show original image
+            originalPreview.innerHTML = `
+                <h4>Original Image:</h4>
+                <img src="${uploadedImage.src}" alt="Original">
+            `;
+            
+            // Generate different icon sizes
+            const sizes = [
+                { name: 'bit-cms-icon-512', size: 512, label: '512x512 (Main PWA Icon)' },
+                { name: 'bit-cms-icon-192', size: 192, label: '192x192 (Android Icon)' },
+                { name: 'apple-touch-icon', size: 180, label: '180x180 (iOS Icon)' },
+                { name: 'favicon', size: 32, label: '32x32 (Favicon)' }
+            ];
+            
+            let iconsHtml = '<h4>Generated Icons:</h4><div>';
+            let downloadHtml = '<h4>Download Icons:</h4>';
+            
+            sizes.forEach(icon => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = icon.size;
+                canvas.height = icon.size;
+                
+                // Draw background
+                ctx.fillStyle = '#007bff';
+                ctx.fillRect(0, 0, icon.size, icon.size);
+                
+                // Draw image (centered and scaled)
+                const scale = Math.min(
+                    (icon.size * 0.8) / uploadedImage.width,
+                    (icon.size * 0.8) / uploadedImage.height
+                );
+                const width = uploadedImage.width * scale;
+                const height = uploadedImage.height * scale;
+                const x = (icon.size - width) / 2;
+                const y = (icon.size - height) / 2;
+                
+                ctx.drawImage(uploadedImage, x, y, width, height);
+                
+                // Add BIT text for small icons
+                if (icon.size <= 192) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = `bold ${icon.size * 0.15}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('BIT', icon.size / 2, icon.size * 0.9);
+                }
+                
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                iconsHtml += `
+                    <div class="icon-preview">
+                        <img src="${dataUrl}" alt="${icon.label}">
+                        <label>${icon.label}</label>
+                    </div>
+                `;
+                
+                downloadHtml += `
+                    <button class="download-btn" onclick="downloadIcon('${dataUrl}', '${icon.name}.png')">
+                        Download ${icon.name}.png
+                    </button>
+                `;
+            });
+            
+            iconsHtml += '</div>';
+            iconPreviews.innerHTML = iconsHtml;
+            downloadSection.innerHTML = downloadHtml;
+            
+            preview.style.display = 'block';
+        }
+        
+        function downloadIcon(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
+        }
+        
+        function showStatus(message, type) {
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => {
+                status.innerHTML = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

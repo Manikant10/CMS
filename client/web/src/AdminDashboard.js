@@ -221,7 +221,7 @@ function AdminDashboard() {
     } else if (activeTab === 'fees') {
       fetchFees();
     }
-  }, [activeTab, apiCall, user]);
+  }, [activeTab, apiCall]);
 
   // Fee management functions
   const fetchFees = async () => {
@@ -311,6 +311,39 @@ function AdminDashboard() {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return password;
+  };
+
+  const handleAddStudent = async () => {
+    try {
+      const response = await apiCall('http://localhost:5000/api/students', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studentForm)
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setStudents([...students, data.data]);
+        setShowAddStudentModal(false);
+        setStudentForm({
+          name: '',
+          rollNo: '',
+          email: '',
+          phone: '',
+          semester: '',
+          section: '',
+          batch: ''
+        });
+        alert('Student added successfully!');
+      } else {
+        alert('Failed to add student: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error adding student:', error);
+      alert('Error adding student');
+    }
   };
 
   const handleUpdateStudent = async () => {

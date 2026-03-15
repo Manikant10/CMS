@@ -1,42 +1,78 @@
 {
   "name": "bit-cms",
-  "version": "1.0.0",
-  "description": "Bhagwant Institute of Technology - College Management System",
+  "version": "2.0.0",
+  "description": "Bhagwant Institute of Technology - Advanced College Management System with PWA",
   "main": "server/production.js",
+  "homepage": "https://bit-cms.vercel.app",
+  "keywords": [
+    "college-management",
+    "education",
+    "pwa",
+    "mongodb",
+    "react",
+    "nodejs",
+    "bit-institute",
+    "student-management",
+    "faculty-management",
+    "course-management",
+    "fee-tracking",
+    "timetable",
+    "attendance",
+    "exams",
+    "notices"
+  ],
   "scripts": {
     "start": "node server/production.js",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server/index.js",
     "client": "cd client/web && npm start",
     "build": "cd client/web && npm run build",
+    "build:pwa": "cd client/web && npm run build && echo 'PWA build complete'",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "deploy": "chmod +x deploy.sh && ./deploy.sh",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "pwa": "cd client/web && npm run build && serve -s build",
+    "pwa:serve": "cd client/web && npm run build && serve -s build -l 3000",
+    "deploy": "npm run build && vercel --prod",
+    "deploy:heroku": "git push heroku main",
+    "deploy:vercel": "vercel --prod",
+    "deploy:docker": "docker-compose up -d",
     "deploy:ssl": "./deploy.sh --ssl",
     "deploy:monitoring": "./deploy.sh --ssl --monitoring",
     "backup": "./deploy.sh --backup",
     "health": "./deploy.sh --health",
+    "setup": "npm install && cd client/web && npm install && cd ../mobile && npm install",
+    "setup:dev": "npm run setup && npm run dev",
+    "analyze": "cd client/web && npm run build && npx bundle-analyzer build/static/js/*.js",
+    "clean": "cd client/web && rm -rf build node_modules && npm install",
+    "clean:all": "rm -rf node_modules client/web/node_modules client/mobile/node_modules && npm run setup",
+    "migrate": "node server/scripts/migrate.js",
+    "seed": "node server/scripts/seed.js",
+    "db:reset": "node server/scripts/reset-db.js",
+    "db:backup": "node server/scripts/backup-db.js",
+    "logs": "tail -f server/logs/app.log",
+    "monitor": "pm2 monit",
+    "pm2:start": "pm2 start server/production.js --name bit-cms",
+    "pm2:restart": "pm2 restart bit-cms",
+    "pm2:stop": "pm2 stop bit-cms",
+    "pm2:delete": "pm2 delete bit-cms",
     "docker:build": "docker build -t bit-cms .",
     "docker:run": "docker-compose up",
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "docker:clean": "docker-compose down -v && docker system prune -f"
+    "docker:clean": "docker-compose down -v && docker system prune -f",
+    "icon:convert": "node create-icons.js",
+    "icon:setup": "start open-icon-converter.bat",
+    "pwa:test": "cd client/web && npm run build && serve -s build -p 3001",
+    "pwa:audit": "cd client/web && npm run build && npx lighthouse http://localhost:3001 --output=json --output-path=./lighthouse-report.json",
+    "security:check": "npm audit",
+    "security:fix": "npm audit fix",
+    "precommit": "npm run lint && npm run test && npm run build",
+    "release": "npm version patch && npm run build && git add . && git commit -m \"Release v\" && git tag v\" && git push origin main --tags"
   },
-  "keywords": [
-    "college",
-    "management",
-    "system",
-    "education",
-    "cms",
-    "nodejs",
-    "react",
-    "socket.io",
-    "mongodb"
-  ],
-  "author": "BIT Development Team",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "mongoose": "^7.6.3",
@@ -56,19 +92,21 @@
     "winston": "^3.11.0",
     "express-validator": "^7.0.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1",
+    "swagger-ui-express": "^5.0.0",
+    "pm2": "^5.3.0",
     "concurrently": "^8.2.2",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
     "eslint": "^8.54.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^3.1.0",
     "@types/node": "^20.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "serve": "^14.2.1",
+    "web-bundle-analyzer": "^0.18.0",
+    "lighthouse": "^11.0.0",
+    "workbox-cli": "^7.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -76,10 +114,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/bit-cms.git"
+    "url": "https://github.com/bit-institute/bit-cms.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/bit-cms/issues"
+    "url": "https://github.com/bit-institute/bit-cms/issues"
   },
-  "homepage": "https://bit-cms.your-domain.com"
+  "author": {
+    "name": "BIT Development Team",
+    "email": "dev@bit.edu",
+    "url": "https://bit.edu"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/bit-institute"
+  }
 }

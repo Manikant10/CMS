@@ -1,0 +1,26 @@
+
+BIT CMS Icon Setup Instructions
+===============================
+
+1. Replace these files with your actual image:
+   - bit-cms-icon-192.png (192x192 pixels)
+   - bit-cms-icon-512.png (512x512 pixels)
+   - apple-touch-icon.png (180x180 pixels)
+   - favicon.ico (32x32 pixels)
+
+2. You can convert the SVG files to PNG using:
+   - Online converter: https://convertio.co/svg-png/
+   - Adobe Illustrator
+   - Inkscape (free)
+   - Canva
+
+3. For best results:
+   - Use your institution logo
+   - Keep design simple
+   - Use high contrast
+   - Ensure square format
+
+4. After replacing icons:
+   - Clear browser cache
+   - Restart development server
+   - Test PWA installation

@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// Routes - WITHOUT Socket.io middleware
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notices', require('./routes/notices'));
 app.use('/api/attendance', require('./routes/attendance'));

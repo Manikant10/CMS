@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "serve": "^14.2.1",
-    "web-bundle-analyzer": "^0.18.0"
+    "webpack-bundle-analyzer": "^4.10.1"
   },
   "keywords": [
     "react",

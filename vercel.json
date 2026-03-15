@@ -28,10 +28,5 @@
     "JWT_SECRET": "@jwt_secret",
     "NODE_ENV": "production",
     "CORS_ORIGIN": "@cors_origin"
-  },
-  "functions": {
-    "server/index.js": {
-      "maxDuration": 10
-    }
   }
 }

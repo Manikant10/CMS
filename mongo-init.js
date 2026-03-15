@@ -1,5 +1,5 @@
 // Initialize MongoDB with collections and indexes
-db = db.getSiblingDB('bit_cms');
+db = db.getSiblingDB('CMS');
 
 // Create collections
 db.createCollection('users');

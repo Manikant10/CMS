@@ -25,9 +25,10 @@
   ],
   "build": {
     "env": {
-      "MONGODB_URI": "@mongodb_uri",
-      "JWT_SECRET": "@jwt_secret",
-      "NODE_ENV": "production"
+      "mongodb_uri": "@mongodb_uri",
+      "jwt_secret": "@jwt_secret",
+      "node_env": "production",
+      "cors_origin": "@cors_origin"
     }
   }
 }

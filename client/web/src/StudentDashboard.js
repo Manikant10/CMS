@@ -16,7 +16,7 @@ function StudentDashboard() {
 
   const fetchStudentData = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/dashboard/student');
+      const response = await apiCall('/api/dashboard/student');
       const data = await response.json();
       if (data.success) {
         setStudentData(data.data);
@@ -30,7 +30,7 @@ function StudentDashboard() {
 
   const fetchTimetables = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/timetable?role=student&semester=${user?.semester}&section=${user?.section}`);
+      const response = await apiCall(`/api/timetable?role=student&semester=${user?.semester}&section=${user?.section}`);
       const data = await response.json();
       if (data.success) {
         setTimetables(data.data);

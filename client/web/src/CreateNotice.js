@@ -19,7 +19,7 @@ function CreateNotice() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiCall('http://localhost:5000/api/notices', {
+      const response = await apiCall('/api/notices', {
         method: 'POST',
         body: JSON.stringify(formData),
       });

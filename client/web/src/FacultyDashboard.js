@@ -30,7 +30,7 @@ function FacultyDashboard() {
 
   const fetchFacultyData = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/dashboard/stats');
+      const response = await apiCall('/api/dashboard/stats');
       const data = await response.json();
       if (data.success) {
         setFacultyData(data.data);
@@ -75,7 +75,7 @@ function FacultyDashboard() {
 
   const fetchTimetables = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/timetable?role=faculty');
+      const response = await apiCall('/api/timetable?role=faculty');
       const data = await response.json();
       if (data.success) {
         setTimetables(data.data);
@@ -102,7 +102,7 @@ function FacultyDashboard() {
         markedBy: facultyData.facultyId || 'faculty-001'
       }));
 
-      const response = await apiCall('http://localhost:5000/api/attendance', {
+      const response = await apiCall('/api/attendance', {
         method: 'POST',
         body: JSON.stringify({ attendance: attendanceRecords })
       });

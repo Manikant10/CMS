@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import CreateNotice from './CreateNotice';
 
-const socket = io('http://localhost:5000');
+const socket = io();
 
 function Notices() {
   const [notices, setNotices] = useState([]);
 
   useEffect(() => {
     // Fetch initial notices
-    fetch('http://localhost:5000/api/notices')
+    fetch('/api/notices')
       .then(res => res.json())
       .then(data => {
         if (data.success) {

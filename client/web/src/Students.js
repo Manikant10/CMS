@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useAuth } from './context/AuthContext';
 
-const socket = io('http://localhost:5000');
+const socket = io();
 
 function Students() {
   const [stats, setStats] = useState({
@@ -60,9 +60,9 @@ function Students() {
       }
 
       const [statsRes, timetableRes, feesRes] = await Promise.all([
-        apiCall(`http://localhost:5000/api/dashboard/stats`),
-        apiCall(`http://localhost:5000/api/timetable?semester=1&section=A`),
-        apiCall(`http://localhost:5000/api/fees/student/${studentId}`)
+        apiCall(`/api/dashboard/stats`),
+        apiCall(`/api/timetable?semester=1&section=A`),
+        apiCall(`/api/fees/student/${studentId}`)
       ]);
 
       const statsData = await statsRes.json();

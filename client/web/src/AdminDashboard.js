@@ -119,7 +119,7 @@ function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/dashboard/stats');
+      const response = await apiCall('/api/dashboard/stats');
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -133,7 +133,7 @@ function AdminDashboard() {
 
   const fetchStudents = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/students');
+      const response = await apiCall('/api/students');
       const data = await response.json();
       if (data.success) {
         setStudents(data.data);
@@ -145,7 +145,7 @@ function AdminDashboard() {
 
   const fetchFaculty = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/faculty');
+      const response = await apiCall('/api/faculty');
       const data = await response.json();
       if (data.success) {
         setFaculty(data.data);
@@ -157,7 +157,7 @@ function AdminDashboard() {
 
   const fetchCourses = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/courses');
+      const response = await apiCall('/api/courses');
       const data = await response.json();
       if (data.success) {
         setCourses(data.data);
@@ -169,7 +169,7 @@ function AdminDashboard() {
 
   const fetchPendingRegistrations = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/approvals/pending');
+      const response = await apiCall('/api/approvals/pending');
       const data = await response.json();
       if (data.success) {
         setPendingRegistrations(data.data);
@@ -181,7 +181,7 @@ function AdminDashboard() {
 
   const fetchTimetables = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/timetable');
+      const response = await apiCall('/api/timetable');
       const data = await response.json();
       if (data.success) {
         setTimetables(data.data);
@@ -194,8 +194,8 @@ function AdminDashboard() {
   const fetchCoursesAndFaculty = async () => {
     try {
       const [coursesResponse, facultyResponse] = await Promise.all([
-        apiCall('http://localhost:5000/api/courses'),
-        apiCall('http://localhost:5000/api/faculty')
+        apiCall('/api/courses'),
+        apiCall('/api/faculty')
       ]);
       
       const coursesData = await coursesResponse.json();
@@ -230,7 +230,7 @@ function AdminDashboard() {
   // Fee management functions
   const fetchFees = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/fees');
+      const response = await apiCall('/api/fees');
       const data = await response.json();
       if (data.success) {
         setFees(data.data);
@@ -242,7 +242,7 @@ function AdminDashboard() {
 
   const handleCreateFee = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/fees', {
+      const response = await apiCall('/api/fees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(feeForm)
@@ -269,7 +269,7 @@ function AdminDashboard() {
 
   const handlePaymentUpdate = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/fees/${selectedFee._id}`, {
+      const response = await apiCall(`/api/fees/${selectedFee._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentForm)
@@ -295,7 +295,7 @@ function AdminDashboard() {
   const deleteFee = async (feeId) => {
     if (window.confirm('Are you sure you want to delete this fee record?')) {
       try {
-        const response = await apiCall(`http://localhost:5000/api/fees/${feeId}`, {
+        const response = await apiCall(`/api/fees/${feeId}`, {
           method: 'DELETE'
         });
         const data = await response.json();
@@ -319,7 +319,7 @@ function AdminDashboard() {
 
   const handleAddStudent = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/students', {
+      const response = await apiCall('/api/students', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -352,7 +352,7 @@ function AdminDashboard() {
 
   const handleUpdateStudent = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/students/${editingStudent._id}`, {
+      const response = await apiCall(`/api/students/${editingStudent._id}`, {
         method: 'PUT',
         body: JSON.stringify(studentForm)
       });
@@ -402,7 +402,7 @@ function AdminDashboard() {
   const confirmDelete = async () => {
     try {
       if (deleteTarget.type === 'student') {
-        const response = await apiCall(`http://localhost:5000/api/students/${deleteTarget.id}`, {
+        const response = await apiCall(`/api/students/${deleteTarget.id}`, {
           method: 'DELETE'
         });
         const data = await response.json();
@@ -413,7 +413,7 @@ function AdminDashboard() {
           alert(data.message || 'Failed to delete student');
         }
       } else if (deleteTarget.type === 'faculty') {
-        const response = await apiCall(`http://localhost:5000/api/faculty/${deleteTarget.id}`, {
+        const response = await apiCall(`/api/faculty/${deleteTarget.id}`, {
           method: 'DELETE'
         });
         const data = await response.json();
@@ -424,7 +424,7 @@ function AdminDashboard() {
           alert(data.message || 'Failed to delete faculty');
         }
       } else if (deleteTarget.type === 'course') {
-        const response = await apiCall(`http://localhost:5000/api/courses/${deleteTarget.id}`, {
+        const response = await apiCall(`/api/courses/${deleteTarget.id}`, {
           method: 'DELETE'
         });
         const data = await response.json();
@@ -462,7 +462,7 @@ function AdminDashboard() {
         approvedAt: new Date()
       };
 
-      const response = await apiCall('http://localhost:5000/api/faculty', {
+      const response = await apiCall('/api/faculty', {
         method: 'POST',
         body: JSON.stringify(facultyData)
       });
@@ -496,7 +496,7 @@ function AdminDashboard() {
 
   const handleUpdateFaculty = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/faculty/${editingFaculty._id}`, {
+      const response = await apiCall(`/api/faculty/${editingFaculty._id}`, {
         method: 'PUT',
         body: JSON.stringify(facultyForm)
       });
@@ -555,7 +555,7 @@ function AdminDashboard() {
 
   const handleAddCourse = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/courses', {
+      const response = await apiCall('/api/courses', {
         method: 'POST',
         body: JSON.stringify(courseForm)
       });
@@ -585,7 +585,7 @@ function AdminDashboard() {
 
   const handleUpdateCourse = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/courses/${editingCourse._id}`, {
+      const response = await apiCall(`/api/courses/${editingCourse._id}`, {
         method: 'PUT',
         body: JSON.stringify(courseForm)
       });
@@ -628,7 +628,7 @@ function AdminDashboard() {
 
   const handleApproveRegistration = async (registrationId) => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/approvals/approve/${registrationId}`, {
+      const response = await apiCall(`/api/approvals/approve/${registrationId}`, {
         method: 'POST'
       });
       const data = await response.json();
@@ -653,7 +653,7 @@ function AdminDashboard() {
 
   const confirmRejectRegistration = async () => {
     try {
-      const response = await apiCall(`http://localhost:5000/api/approvals/reject/${rejectTarget.id}`, {
+      const response = await apiCall(`/api/approvals/reject/${rejectTarget.id}`, {
         method: 'POST'
       });
       const data = await response.json();
@@ -679,7 +679,7 @@ function AdminDashboard() {
 
   const handleAddTimetable = async () => {
     try {
-      const response = await apiCall('http://localhost:5000/api/timetable', {
+      const response = await apiCall('/api/timetable', {
         method: 'POST',
         body: JSON.stringify(timetableForm)
       });
@@ -751,7 +751,7 @@ function AdminDashboard() {
         updateData.newPassword = profileForm.newPassword;
       }
 
-      const response = await apiCall('http://localhost:5000/api/admin/profile', {
+      const response = await apiCall('/api/admin/profile', {
         method: 'PUT',
         body: JSON.stringify(updateData)
       });

@@ -5,6 +5,7 @@ module.exports = {
   ],
   rules: {
     'react-hooks/exhaustive-deps': 'off',
-    'no-lone-blocks': 'off'
+    'no-lone-blocks': 'off',
+    'no-use-before-define': 'off'
   }
 };

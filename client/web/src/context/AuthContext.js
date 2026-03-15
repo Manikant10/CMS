@@ -67,7 +67,11 @@ export const AuthProvider = ({ children }) => {
       ...options.headers,
     };
 
-    const response = await fetch(url, {
+    // Use absolute URL for API calls
+    const baseUrl = window.location.origin;
+    const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
+
+    const response = await fetch(fullUrl, {
       ...options,
       headers,
     });

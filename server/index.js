@@ -6,11 +6,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
-// Use mock database for demo purposes
-console.log('Using Mock Database for demo...');
-const connectDB = require('./config/db-mock');
-
-// Connect to Database
+// Connect to MongoDB Database
+const connectDB = require('./config/db');
 connectDB();
 
 const app = express();

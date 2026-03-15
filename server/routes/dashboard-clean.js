@@ -7,6 +7,8 @@ const Attendance = require('../models/Attendance');
 const Fee = require('../models/Fee');
 const Notice = require('../models/Notice');
 const Exam = require('../models/Exam');
+const LibraryBook = require('../models/LibraryBook');
+const BookIssue = require('../models/BookIssue');
 const { protect } = require('../middleware/auth');
 
 // Helper function to get data (MongoDB or Mock)

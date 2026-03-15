@@ -43,7 +43,7 @@ function Students() {
       socket.off('timetable-updated');
       socket.off('fee-updated');
     };
-  }, []);
+  }, [fetchData]);
 
   const fetchData = async () => {
     try {

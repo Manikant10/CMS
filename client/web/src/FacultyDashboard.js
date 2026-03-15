@@ -23,7 +23,7 @@ function FacultyDashboard() {
   useEffect(() => {
     fetchFacultyData();
     fetchTimetables();
-  }, []);
+  }, [fetchFacultyData, fetchTimetables]);
 
   const fetchFacultyData = async () => {
     try {

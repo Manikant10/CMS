@@ -111,7 +111,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchAdminData();
-  }, []);
+  }, [fetchAdminData]);
 
   const fetchAdminData = async () => {
     try {
@@ -221,7 +221,7 @@ function AdminDashboard() {
     } else if (activeTab === 'fees') {
       fetchFees();
     }
-  }, [activeTab, apiCall]);
+  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchStudents, fetchTimetables]);
 
   // Fee management functions
   const fetchFees = async () => {

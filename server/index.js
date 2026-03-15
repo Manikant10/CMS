@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
-const { Server } = require('socket.io');
 require('dotenv').config();
 
 // Connect to MongoDB Database
@@ -10,11 +9,6 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
-const io = new Server(server, {
-  cors: {
-    origin: '*', // Allow all origins for now
-  },
-});
 
 // Middleware
 app.use(cors());
@@ -25,33 +19,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-
-// Pass io to routes
-app.use('/api/notices', (req, res, next) => {
-  req.io = io;
-  next();
-}, require('./routes/notices'));
-
-app.use('/api/attendance', (req, res, next) => {
-  req.io = io;
-  next();
-}, require('./routes/attendance'));
-
-app.use('/api/timetable', (req, res, next) => {
-  req.io = io;
-  next();
-}, require('./routes/timetable'));
-
-app.use('/api/fees', (req, res, next) => {
-  req.io = io;
-  next();
-}, require('./routes/fees'));
-
-app.use('/api/students', (req, res, next) => {
-  req.io = io;
-  next();
-}, require('./routes/students'));
-
+app.use('/api/notices', require('./routes/notices'));
+app.use('/api/attendance', require('./routes/attendance'));
+app.use('/api/timetable', require('./routes/timetable'));
+app.use('/api/fees', require('./routes/fees'));
+app.use('/api/students', require('./routes/students'));
 app.use('/api/faculty', require('./routes/faculty'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/exams', require('./routes/exams'));
@@ -65,14 +37,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BIT CMS Server Running' });
 });
 
-// Socket.io connection
-io.on('connection', (socket) => {
-  console.log('a user connected');
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
-
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -81,3 +45,5 @@ app.use((err, req, res, next) => {
     message: err.message || 'Server Error',
   });
 });
+
+module.exports = app;

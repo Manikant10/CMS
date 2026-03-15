@@ -22,13 +22,5 @@
       "src": "/(.*)",
       "dest": "/client/web/$1"
     }
-  ],
-  "build": {
-    "env": {
-      "mongodb_uri": "@mongodb_uri",
-      "jwt_secret": "@jwt_secret",
-      "node_env": "production",
-      "cors_origin": "@cors_origin"
-    }
-  }
+  ]
 }

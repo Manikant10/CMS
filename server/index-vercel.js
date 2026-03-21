@@ -23,7 +23,7 @@ const app = express();
 
 // CORS configuration for Vercel
 app.use(cors({
-  origin: ['https://bit-1234.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
+  origin: ['https://cms-eta-beige.vercel.app', 'https://bit-1234.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
   credentials: true
 }));
 

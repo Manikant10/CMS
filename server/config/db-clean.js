@@ -5,17 +5,19 @@ const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
+      connectTimeoutMS: 30000,        // Increased to 30 seconds
+      maxPoolSize: 10,
+      bufferCommands: false,
+      bufferMaxEntries: 0
     });
     
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     
   } catch (error) {
     console.error('❌ MongoDB Connection Error:', error.message);
-    // Don't exit the process, just log the error
+    global.fallbackMode = true;
+    throw error; // Re-throw to trigger fallback mode
   }
 };
 

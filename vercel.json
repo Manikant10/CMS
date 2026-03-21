@@ -4,23 +4,18 @@
     {
       "src": "server/index-vercel.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "client/web/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/server/index-vercel.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/web/build/$1"
     }
-  ]
+  ],
+  "functions": {
+    "server/index-vercel.js": {
+      "maxDuration": 10
+    }
+  },
+  "outputDirectory": "server"
 }

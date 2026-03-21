@@ -1,5 +1,5 @@
 // API Configuration for separate deployment
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://your-backend-url.vercel.app';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://cms-eta-beige.vercel.app';
 
 export const apiConfig = {
   baseURL: API_BASE_URL,

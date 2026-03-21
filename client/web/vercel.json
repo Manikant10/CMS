@@ -2,15 +2,17 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
+      "src": "client/web/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
       }
     }
   ],
-  "outputDirectory": "build",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "framework": "create-react-app"
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/client/web/build/$1"
+    }
+  ]
 }

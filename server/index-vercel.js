@@ -4,14 +4,30 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
-// Connect to MongoDB Database
-const connectDB = require('./config/db');
+// Connect to MongoDB Database (with error handling)
+const connectDB = async () => {
+  try {
+    const connectDB = require('./config/db-clean');
+    await connectDB();
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.log('⚠️ MongoDB connection failed, using fallback mode');
+    global.fallbackMode = true;
+  }
+};
+
+// Start connection (don't wait for it)
 connectDB();
 
 const app = express();
 
+// CORS configuration for Vercel
+app.use(cors({
+  origin: ['https://bit-1234.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
+  credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -34,7 +50,7 @@ app.use('/api/admin', require('./routes/admin'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'BIT CMS Server Running' });
+  res.json({ status: 'ok', message: 'BIT CMS Server Running on Vercel' });
 });
 
 // Error handler
@@ -46,4 +62,5 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Export for Vercel (production)
 module.exports = app;

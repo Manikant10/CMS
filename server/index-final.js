@@ -4,11 +4,21 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
-// Connect to MongoDB Database (with error handling)
-const connectDB = require('./config/db-clean');
-connectDB().catch(err => {
-  console.log('⚠️ MongoDB connection failed, but server will continue without database');
-});
+// Connect to MongoDB Database (async with timeout)
+const connectDB = async () => {
+  try {
+    const connectDB = require('./config/db-clean');
+    await connectDB();
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.log('⚠️ MongoDB connection failed, using fallback mode');
+    // Set global flag for fallback mode
+    global.fallbackMode = true;
+  }
+};
+
+// Start connection (don't wait for it)
+connectDB();
 
 const app = express();
 

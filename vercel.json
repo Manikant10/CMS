@@ -1,38 +1,36 @@
 {
   "version": 2,
+  "rootDirectory": "client/web",
   "builds": [
     {
-      "src": "server/index-vercel.js",
+      "src": "../server/index-vercel.js",
       "use": "@vercel/node"
     },
     {
-      "src": "client/web/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
-        "buildCommand": "npm run build",
-        "installCommand": "npm install"
+        "distDir": "build"
       }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server/index-vercel.js"
+      "dest": "../server/index-vercel.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/client/web/build/$1"
+      "dest": "build/$1"
     }
   ],
   "functions": {
-    "server/index-vercel.js": {
+    "../server/index-vercel.js": {
       "maxDuration": 10
     }
   },
-  "outputDirectory": "client/web/build",
+  "outputDirectory": "build",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "devCommand": "npm start",
   "framework": "create-react-app"
 }

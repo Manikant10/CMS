@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import { useAuth } from './context/AuthContext';
 import CreateNotice from './CreateNotice';
-
-const socket = io();
 
 function Notices() {
   const [notices, setNotices] = useState([]);
@@ -17,15 +14,6 @@ function Notices() {
           setNotices(data.data);
         }
       });
-
-    // Listen for new notices
-    socket.on('new-notice', (notice) => {
-      setNotices(prevNotices => [notice, ...prevNotices]);
-    });
-
-    return () => {
-      socket.off('new-notice');
-    };
   }, []);
 
   return (

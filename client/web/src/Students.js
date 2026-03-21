@@ -20,28 +20,6 @@ function Students() {
 
   useEffect(() => {
     fetchData();
-
-    // Listen for real-time updates
-    socket.on('attendance-updated', (data) => {
-      console.log('Attendance updated:', data);
-      fetchData();
-    });
-
-    socket.on('timetable-updated', (data) => {
-      console.log('Timetable updated:', data);
-      fetchData();
-    });
-
-    socket.on('fee-updated', (data) => {
-      console.log('Fee updated:', data);
-      fetchData();
-    });
-
-    return () => {
-      socket.off('attendance-updated');
-      socket.off('timetable-updated');
-      socket.off('fee-updated');
-    };
   }, [fetchData]);
 
   const fetchData = async () => {

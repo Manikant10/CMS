@@ -9,7 +9,9 @@
       "src": "client/web/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build"
+        "distDir": "build",
+        "buildCommand": "npm run build",
+        "installCommand": "npm install"
       }
     }
   ],
@@ -27,5 +29,10 @@
     "server/index-vercel.js": {
       "maxDuration": 10
     }
-  }
+  },
+  "outputDirectory": "client/web/build",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "devCommand": "npm start",
+  "framework": "create-react-app"
 }

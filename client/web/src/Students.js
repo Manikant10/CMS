@@ -1,12 +1,8 @@
-
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-use-before-define */
 
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import { useAuth } from './context/AuthContext';
-
-const socket = io();
 
 function Students() {
   const [stats, setStats] = useState({

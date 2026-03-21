@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
+import { useAuth } from './context/AuthContext';
 import CreateNotice from './CreateNotice';
 
 const socket = io();

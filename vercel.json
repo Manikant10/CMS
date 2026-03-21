@@ -16,11 +16,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index-vercel.js"
+      "dest": "/server/index-vercel.js"
     },
     {
       "src": "/(.*)",
-      "dest": "client/web/build/$1"
+      "dest": "/client/web/build/$1"
     }
   ]
 }

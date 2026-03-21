@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server/index-vercel.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/index-vercel.js"
+    }
+  ],
+  "functions": {
+    "server/index-vercel.js": {
+      "maxDuration": 10
+    }
+  }
+}

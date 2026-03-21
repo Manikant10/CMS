@@ -7,14 +7,21 @@ require('dotenv').config();
 // Connect to MongoDB Database (with error handling)
 const connectDB = async () => {
   try {
+    console.log('Connecting to MongoDB...');
     const connectDB = require('./config/db-clean');
     await connectDB();
     console.log('✅ MongoDB connected successfully');
   } catch (error) {
-    console.log('⚠️ MongoDB connection failed, using fallback mode');
+    console.log('⚠️ MongoDB connection failed, enabling fallback mode');
     global.fallbackMode = true;
   }
 };
+
+// Force fallback mode if MongoDB URI is not available
+if (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes('your-mongodb-uri')) {
+  console.log('⚠️ MongoDB URI not configured, enabling fallback mode');
+  global.fallbackMode = true;
+}
 
 // Start connection (don't wait for it)
 connectDB();

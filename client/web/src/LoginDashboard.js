@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import apiConfig from './config/api';
 import './LoginDashboard.css';
 
 function LoginDashboard() {
@@ -47,7 +47,7 @@ function LoginDashboard() {
         }
         
         // Registration
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch(apiConfig.endpoints.register, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),

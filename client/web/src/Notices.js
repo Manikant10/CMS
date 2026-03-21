@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import CreateNotice from './CreateNotice';
+import apiConfig from './config/api';
 
 function Notices() {
   const [notices, setNotices] = useState([]);
 
   useEffect(() => {
     // Fetch initial notices
-    fetch('/api/notices')
+    fetch(apiConfig.endpoints.notices)
       .then(res => res.json())
       .then(data => {
         if (data.success) {

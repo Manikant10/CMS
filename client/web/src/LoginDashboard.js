@@ -6,7 +6,7 @@ import './LoginDashboard.css';
 function LoginDashboard() {
   const [loginType, setLoginType] = useState('');
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     name: '',
     rollNo: '',
@@ -61,7 +61,7 @@ function LoginDashboard() {
             alert(result.message || 'Registration submitted successfully. Please wait for admin approval.');
             setIsRegistering(false);
             setFormData({
-              email: '',
+              username: '',
               password: '',
               name: '',
               rollNo: '',
@@ -73,7 +73,7 @@ function LoginDashboard() {
             });
           } else {
             // Normal login after registration (for admin if allowed)
-            const loginResult = await login(formData.email, formData.password, navigate);
+            const loginResult = await login(formData.username, formData.password, navigate);
             if (!loginResult.success) {
               setError(loginResult.message || 'Registration successful but login failed');
             }
@@ -83,7 +83,7 @@ function LoginDashboard() {
         }
       } else {
         // Login
-        const result = await login(formData.email, formData.password, navigate);
+        const result = await login(formData.username, formData.password, navigate);
         if (!result.success) {
           setError(result.message || 'Authentication failed');
         }
@@ -132,12 +132,12 @@ function LoginDashboard() {
           {!isRegistering ? (
             <>
               <div className="input-group">
-                <label>Email Address</label>
+                <label>Username</label>
                 <input
-                  type="email"
-                  name="email"
-                  placeholder={`Enter your ${loginType} email`}
-                  value={formData.email}
+                  type="text"
+                  name="username"
+                  placeholder={`Enter your ${loginType} username`}
+                  value={formData.username}
                   onChange={handleInputChange}
                   required
                   style={{ borderColor: config.color }}
@@ -173,12 +173,12 @@ function LoginDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Email Address</label>
+                <label>Username</label>
                 <input
-                  type="email"
-                  name="email"
-                  placeholder={`Enter your ${loginType} email`}
-                  value={formData.email}
+                  type="text"
+                  name="username"
+                  placeholder={`Enter your ${loginType} username`}
+                  value={formData.username}
                   onChange={handleInputChange}
                   required
                   style={{ borderColor: config.color }}

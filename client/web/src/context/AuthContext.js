@@ -18,12 +18,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password, navigate) => {
+  const login = async (username, password, navigate) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: username, password }), // Send username as email to backend
       });
 
       const data = await response.json();
@@ -67,11 +67,7 @@ export const AuthProvider = ({ children }) => {
       ...options.headers,
     };
 
-    // Use absolute URL for API calls
-    const baseUrl = window.location.origin;
-    const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
-
-    const response = await fetch(fullUrl, {
+    const response = await fetch(url, {
       ...options,
       headers,
     });

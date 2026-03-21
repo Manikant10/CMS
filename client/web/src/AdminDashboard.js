@@ -114,8 +114,11 @@ function AdminDashboard() {
   });
 
   useEffect(() => {
-    fetchAdminData();
-  }, [fetchAdminData]);
+    const loadData = async () => {
+      await fetchAdminData();
+    };
+    loadData();
+  }, []);
 
   const fetchAdminData = async () => {
     try {
@@ -212,20 +215,7 @@ function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (activeTab === 'students') {
-      fetchStudents();
-    } else if (activeTab === 'faculty') {
-      fetchFaculty();
-    } else if (activeTab === 'courses') {
-      fetchCourses();
-    } else if (activeTab === 'timetable') {
-      fetchTimetables();
-      fetchCoursesAndFaculty();
-    } else if (activeTab === 'fees') {
-      fetchFees();
-    }
-  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchStudents, fetchTimetables]);
+  // Move useEffect after all function definitions to avoid hoisting issues
 
   // Fee management functions
   const fetchFees = async () => {
@@ -786,6 +776,22 @@ function AdminDashboard() {
     });
     setShowProfileModal(true);
   };
+
+  // useEffect for tab-based data fetching - moved after all function definitions
+  useEffect(() => {
+    if (activeTab === 'students') {
+      fetchStudents();
+    } else if (activeTab === 'faculty') {
+      fetchFaculty();
+    } else if (activeTab === 'courses') {
+      fetchCourses();
+    } else if (activeTab === 'timetable') {
+      fetchTimetables();
+      fetchCoursesAndFaculty();
+    } else if (activeTab === 'fees') {
+      fetchFees();
+    }
+  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchStudents, fetchTimetables]);
 
   const renderStudents = () => (
     <div className="tab-content">

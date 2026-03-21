@@ -1,39 +1,49 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 require('dotenv').config();
+
+// Admin credentials — change these before running
+const ADMIN_EMAIL = 'bitadmin_110';
+const ADMIN_PASSWORD = 'BitAdmin@2024';
 
 const createRealAdmin = async () => {
   try {
-    // Use the correct MongoDB connection string
-    await mongoose.connect('mongodb+srv://bitadmin_110:Mani@cms.trgugqf.mongodb.net/test?retryWrites=true&w=majority');
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+      throw new Error('MONGODB_URI is not set in .env');
+    }
+
+    await mongoose.connect(uri);
     console.log('Connected to MongoDB');
-    
+
     const User = require('./server/models/User');
-    
-    // Delete existing admin user if exists
-    await User.deleteOne({ email: 'bitadmin_110' });
-    
-    // Create new admin user with correct credentials
-    const admin = await User.create({
-      email: 'bitadmin_110',
-      password: 'Mani',
+
+    // Delete existing admin if present
+    await User.deleteOne({ email: ADMIN_EMAIL });
+
+    // Create admin — password is auto-hashed by the User model pre-save hook
+    await User.create({
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD,
       role: 'admin',
-      isActive: true
+      isActive: true,
     });
-    
-    console.log('✅ Real admin user created successfully');
-    console.log('Email: bitadmin_110');
-    console.log('Password: Mani');
-    console.log('Role: admin');
-    
-    // Test the password
-    const testAdmin = await User.findOne({ email: 'bitadmin_110' }).select('+password');
-    const isMatch = await testAdmin.matchPassword('Mani');
-    console.log('Password test result:', isMatch ? '✅ Success' : '❌ Failed');
-    
+
+    // Verify password hash works
+    const saved = await User.findOne({ email: ADMIN_EMAIL }).select('+password');
+    const isMatch = await saved.matchPassword(ADMIN_PASSWORD);
+
+    if (isMatch) {
+      console.log('✅ Admin created successfully');
+      console.log('   Username:', ADMIN_EMAIL);
+      console.log('   Password:', ADMIN_PASSWORD);
+    } else {
+      console.error('❌ Password verification failed');
+    }
+
     await mongoose.connection.close();
   } catch (error) {
     console.error('Error:', error.message);
+    process.exit(1);
   }
 };
 

@@ -162,25 +162,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Original MongoDB logic - use real database authentication with fallback
-    // Direct admin login bypass for specific credentials
-    console.log('Checking admin bypass for:', email); // Debug log
-    if (email === 'bitadmin_110' && password === 'Mani') {
-      console.log('Admin bypass successful!'); // Debug log
-      return res.json({
-        success: true,
-        token: 'admin-token-' + Date.now(),
-        user: {
-          id: 'real-admin-id',
-          email: 'bitadmin_110',
-          role: 'admin',
-          profileId: 'admin-profile-id',
-          name: 'BIT Admin',
-        },
-      });
-    }
-
-    // Try database authentication
+    // Database authentication
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });

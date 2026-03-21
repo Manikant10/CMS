@@ -6,7 +6,7 @@
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Click "Add New" → "Project"
 3. Import your GitHub repository
-4. **Root Directory**: Leave empty (use repo root)
+4. **Root Directory**: Leave empty (use repository root)
 5. **Framework Preset**: Other
 6. **Build Command**: Leave empty
 7. **Output Directory**: Leave empty

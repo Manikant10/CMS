@@ -16,5 +16,6 @@
     "server/index-vercel.js": {
       "maxDuration": 10
     }
-  }
+  },
+  "outputDirectory": "server"
 }

@@ -1,0 +1,49 @@
+# ─── Environment files (NEVER commit these) ─────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.prod
+.env.heroku
+.env.vercel
+
+# ─── Dependencies ───────────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# ─── Build outputs ──────────────────────────────────────────────────────────────
+client/web/build/
+client/mobile/android/build/
+client/mobile/ios/build/
+dist/
+
+# ─── OS / Editor ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# ─── Logs ───────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ─── Uploads (user data — use cloud storage in production) ──────────────────────
+server/uploads/*
+!server/uploads/.gitkeep
+
+# ─── Dead / temp files ──────────────────────────────────────────────────────────
+*.bat
+convert-*.bat
+deploy-*.bat
+open-*.bat
+start-*.bat
+run-*.bat
+icon-converter.html
+
+# ─── Deployment helpers (keep markdown docs, ignore scripts) ────────────────────
+deploy-now.bat
+deploy-to-vercel.bat
+DEPLOY_NOW.bat

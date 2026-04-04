@@ -1,65 +1,65 @@
 const express = require('express');
 const router = express.Router();
+const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
 
-// PUT /api/admin/profile - Update admin profile
+// PUT /api/admin/profile — Update admin email/name
 router.put('/profile', protect, authorize('admin'), async (req, res) => {
   try {
-    const { name, email, currentPassword, newPassword } = req.body;
-    
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      
-      // Find admin user
-      const adminUser = mockData.users.find(u => u.role === 'admin');
-      const adminProfile = mockData.admins?.find(a => a.userId === adminUser._id);
-      
-      if (!adminUser || !adminProfile) {
-        return res.status(404).json({ success: false, message: 'Admin profile not found' });
-      }
-      
-      // Validate current password if changing password
-      if (newPassword) {
-        if (!currentPassword) {
-          return res.status(400).json({ success: false, message: 'Current password is required to change password' });
-        }
-        
-        // Verify current password (mock validation)
-        if (adminUser.email === 'Admin123@bit.edu' && currentPassword !== 'Bitadmin@1122') {
-          return res.status(400).json({ success: false, message: 'Current password is incorrect' });
-        }
-        
-        // Update password in global validPasswords
-        if (!global.validPasswords) {
-          global.validPasswords = {};
-        }
-        
-        // Remove old password
-        delete global.validPasswords[adminUser.email];
-        
-        // Add new password
-        global.validPasswords[email] = newPassword;
-        
-        // Update user email if changed
-        adminUser.email = email;
-      }
-      
-      // Update profile
-      adminProfile.name = name;
-      adminProfile.email = email;
-      
-      return res.json({ 
-        success: true, 
-        message: 'Profile updated successfully',
-        data: {
-          name: adminProfile.name,
-          email: adminProfile.email
-        }
-      });
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' });
     }
-    
-    // MongoDB logic would go here
-    res.json({ success: true, message: 'Profile updated' });
+
+    // Check email uniqueness (skip own record)
+    const conflict = await User.findOne({ email: email.toLowerCase(), _id: { $ne: req.user._id } });
+    if (conflict) {
+      return res.status(400).json({ success: false, message: 'Email already in use by another account' });
+    }
+
+    req.user.email = email.toLowerCase();
+    await req.user.save();
+
+    return res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: { email: req.user.email },
+    });
+  } catch (error) {
+    console.error('Admin profile update error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/admin/users — List all users (admin only)
+router.get('/users', protect, authorize('admin'), async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /api/admin/users/:id/toggle — Activate / deactivate a user
+router.put('/users/:id/toggle', protect, authorize('admin'), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ success: false, message: 'Cannot deactivate your own account' });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+      data: { id: user._id, isActive: user.isActive },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

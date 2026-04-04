@@ -1,80 +1,91 @@
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import apiConfig from '../config/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Restore session from localStorage on mount
   useEffect(() => {
-    // Check for token and user in localStorage on mount
-    const storedUser = localStorage.getItem('bit_cms_user');
-    const storedToken = localStorage.getItem('bit_cms_token');
-
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedUser  = localStorage.getItem('bit_cms_user');
+      const storedToken = localStorage.getItem('bit_cms_token');
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch {
+      localStorage.removeItem('bit_cms_user');
+      localStorage.removeItem('bit_cms_token');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const login = async (username, password, navigate) => {
+  const login = async (email, password, navigate) => {
     try {
       const response = await fetch(apiConfig.endpoints.login, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, password }), // Send username as email to backend
+        body:    JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       const data = await response.json();
+
       if (data.success) {
         const userData = { ...data.user, token: data.token };
         setUser(userData);
-        localStorage.setItem('bit_cms_user', JSON.stringify(userData));
+        localStorage.setItem('bit_cms_user',  JSON.stringify(userData));
         localStorage.setItem('bit_cms_token', data.token);
-        
-        // Redirect to dashboard after successful login
-        if (navigate) {
-          navigate('/dashboard');
-        }
-        
+        if (navigate) navigate('/dashboard');
         return { success: true };
-      } else {
-        return { success: false, message: data.message };
       }
-    } catch (error) {
-      return { success: false, message: 'Server error connection failed' };
+
+      return { success: false, message: data.message || 'Login failed' };
+    } catch {
+      return { success: false, message: 'Cannot reach server. Please try again.' };
     }
   };
 
-  const logout = (navigate) => {
+  const logout = useCallback((navigate) => {
     setUser(null);
     localStorage.removeItem('bit_cms_user');
     localStorage.removeItem('bit_cms_token');
-    
-    // Redirect to login page after logout
-    if (navigate) {
-      navigate('/login');
-    }
-  };
+    if (navigate) navigate('/login');
+  }, []);
 
-  // Helper function to make authenticated API calls
-  const apiCall = async (url, options = {}) => {
+  /**
+   * Authenticated fetch wrapper.
+   * Accepts both relative paths ('/api/...') and full URLs.
+   * Automatically attaches the Bearer token and handles 401.
+   */
+  const apiCall = useCallback(async (urlOrPath, options = {}) => {
     const token = localStorage.getItem('bit_cms_token');
+
+    // Resolve relative paths against the configured base URL
+    const url = urlOrPath.startsWith('http')
+      ? urlOrPath
+      : `${apiConfig.baseURL}${urlOrPath}`;
+
     const headers = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    const response = await fetch(url, { ...options, headers });
+
+    // Auto-logout on expired / invalid token
+    if (response.status === 401) {
+      setUser(null);
+      localStorage.removeItem('bit_cms_user');
+      localStorage.removeItem('bit_cms_token');
+      window.location.href = '/login';
+    }
 
     return response;
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading, apiCall }}>
@@ -85,8 +96,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

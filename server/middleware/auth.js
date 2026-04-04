@@ -1,52 +1,64 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Mock data helper
-const getMockData = () => global.mockDB || {};
-
-// Protect routes - require authentication
+/**
+ * Protect routes — require a valid Bearer JWT.
+ * The mock-token path has been removed; all auth now goes through
+ * real JWT verification even in development.
+ */
 const protect = async (req, res, next) => {
   let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
+  ) {
     token = req.headers.authorization.split(' ')[1];
   }
 
   if (!token) {
-    return res.status(401).json({ success: false, message: 'Not authorized, no token' });
+    return res
+      .status(401)
+      .json({ success: false, message: 'Not authorized — no token provided' });
   }
 
   try {
-    // Check if using mock data
-    if (global.mockDB && token.startsWith('mock-token-')) {
-      // For mock tokens, we'll extract user info from a simple approach
-      // In a real app, this would be proper JWT verification
-      const mockData = getMockData();
-      
-      // For demo purposes, we'll assume the first user for any mock token
-      // In production, you'd want proper token handling
-      req.user = mockData.users[0]; // Default to admin for demo
-      return next();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Not authorized — user not found' });
     }
 
-    // Original JWT verification for MongoDB
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+    if (!user.isActive) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Account has been deactivated' });
     }
+
+    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+    const message =
+      error.name === 'TokenExpiredError'
+        ? 'Session expired — please log in again'
+        : 'Not authorized — invalid token';
+    return res.status(401).json({ success: false, message });
   }
 };
 
-// Role-based authorization
+/**
+ * Restrict access to specific roles.
+ * Usage: router.get('/admin-only', protect, authorize('admin'), handler)
+ */
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: `Role '${req.user.role}' is not authorized to access this route`,
+        message: `Access denied — role '${req.user?.role}' is not permitted`,
       });
     }
     next();

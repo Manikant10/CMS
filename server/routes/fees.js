@@ -1,284 +1,129 @@
 const express = require('express');
 const router = express.Router();
+const Fee     = require('../models/Fee');
+const Student = require('../models/Student');
 const { protect, authorize } = require('../middleware/auth');
 
-// GET /api/fees/student/:studentId - Get fee details for a specific student
+// GET /api/fees — All fee records (admin only)
+router.get('/', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+    const query = {};
+    if (status) query.status = status;
+
+    const pageNum  = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
+
+    const [fees, total] = await Promise.all([
+      Fee.find(query)
+        .populate('student', 'name rollNo semester')
+        .sort({ createdAt: -1 })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum),
+      Fee.countDocuments(query),
+    ]);
+
+    res.json({ success: true, data: fees, total, page: pageNum, pages: Math.ceil(total / limitNum) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/fees/student/:studentId — Fee records for a specific student
 router.get('/student/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params;
-    
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      const student = mockData.students.find(s => s._id === studentId);
-      
-      if (!student) {
-        return res.status(404).json({ success: false, message: 'Student not found' });
-      }
-      
-      // Get or create fee record for student
-      let feeRecord = mockData.fees?.find(f => f.studentId === studentId);
-      
-      if (!feeRecord) {
-        // Create default fee record
-        feeRecord = {
-          _id: Date.now().toString(),
-          studentId: studentId,
-          studentName: student.name,
-          rollNo: student.rollNo,
-          semester: student.semester,
-          totalFee: 50000, // Default total fee
-          paidAmount: 0,
-          remainingAmount: 50000,
-          feeBreakdown: [
-            {
-              type: 'Tuition Fee',
-              amount: 30000,
-              paid: 0,
-              remaining: 30000
-            },
-            {
-              type: 'Library Fee',
-              amount: 5000,
-              paid: 0,
-              remaining: 5000
-            },
-            {
-              type: 'Lab Fee',
-              amount: 10000,
-              paid: 0,
-              remaining: 10000
-            },
-            {
-              type: 'Examination Fee',
-              amount: 5000,
-              paid: 0,
-              remaining: 5000
-            }
-          ],
-          paymentHistory: [],
-          lastUpdated: new Date(),
-          createdAt: new Date()
-        };
-        
-        if (!mockData.fees) {
-          mockData.fees = [];
-        }
-        mockData.fees.push(feeRecord);
-      }
-      
-      return res.json({ success: true, data: feeRecord });
+
+    // Students can only view their own fees
+    if (req.user.role === 'student' && req.user.profileId?.toString() !== studentId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
     }
-    
-    // MongoDB logic would go here
-    res.json({ success: true, data: {} });
+
+    const fees = await Fee.find({ student: studentId })
+      .populate('student', 'name rollNo semester')
+      .sort({ semester: 1 });
+
+    res.json({ success: true, data: fees });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// GET /api/fees - Get all fee records (admin only)
-router.get('/', protect, authorize('admin'), async (req, res) => {
-  try {
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      const fees = mockData.fees || [];
-      
-      // Enrich fee records with student details
-      const enrichedFees = fees.map(fee => {
-        const student = mockData.students.find(s => s._id === fee.studentId);
-        return {
-          ...fee,
-          studentName: student?.name || 'Unknown',
-          rollNo: student?.rollNo || 'N/A',
-          semester: student?.semester || 'N/A'
-        };
-      });
-      
-      return res.json({ success: true, data: enrichedFees });
-    }
-    
-    res.json({ success: true, data: [] });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// PUT /api/fees/:feeId - Update fee record (admin only)
-router.put('/:feeId', protect, authorize('admin'), async (req, res) => {
-  try {
-    const { feeId } = req.params;
-    const { paidAmount, paymentNote } = req.body;
-    
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      const feeIndex = mockData.fees?.findIndex(f => f._id === feeId);
-      
-      if (feeIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Fee record not found' });
-      }
-      
-      const feeRecord = mockData.fees[feeIndex];
-      
-      // Update paid amount and remaining
-      const newPaidAmount = parseFloat(paidAmount) || 0;
-      const totalPaid = feeRecord.paidAmount + newPaidAmount;
-      const remainingAmount = feeRecord.totalFee - totalPaid;
-      
-      // Add to payment history
-      const paymentEntry = {
-        date: new Date(),
-        amount: newPaidAmount,
-        paymentNote: paymentNote || 'Fee payment',
-        paymentMethod: 'Offline',
-        updatedBy: req.user.profileId
-      };
-      
-      // Update fee record
-      mockData.fees[feeIndex] = {
-        ...feeRecord,
-        paidAmount: totalPaid,
-        remainingAmount: remainingAmount,
-        paymentHistory: [...(feeRecord.paymentHistory || []), paymentEntry],
-        lastUpdated: new Date()
-      };
-      
-      // Update fee breakdown
-      let remainingToDistribute = newPaidAmount;
-      const updatedBreakdown = feeRecord.feeBreakdown.map(item => {
-        if (remainingToDistribute > 0 && item.remaining > 0) {
-          const deduction = Math.min(remainingToDistribute, item.remaining);
-          remainingToDistribute -= deduction;
-          return {
-            ...item,
-            paid: item.paid + deduction,
-            remaining: item.remaining - deduction
-          };
-        }
-        return item;
-      });
-      
-      mockData.fees[feeIndex].feeBreakdown = updatedBreakdown;
-      
-      // Emit real-time update
-      req.io.emit('fee-updated', {
-        studentId: feeRecord.studentId,
-        feeData: mockData.fees[feeIndex]
-      });
-      
-      return res.json({ 
-        success: true, 
-        data: mockData.fees[feeIndex],
-        message: 'Fee record updated successfully'
-      });
-    }
-    
-    res.json({ success: true, message: 'Fee updated' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// POST /api/fees - Create fee record for student (admin only)
+// POST /api/fees — Create fee record (admin only)
 router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const { studentId, totalFee, feeBreakdown } = req.body;
-    
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      const student = mockData.students.find(s => s._id === studentId);
-      
-      if (!student) {
-        return res.status(404).json({ success: false, message: 'Student not found' });
-      }
-      
-      // Check if fee record already exists
-      const existingFee = mockData.fees?.find(f => f.studentId === studentId);
-      if (existingFee) {
-        return res.status(400).json({ success: false, message: 'Fee record already exists for this student' });
-      }
-      
-      const newFeeRecord = {
-        _id: Date.now().toString(),
-        studentId: studentId,
-        studentName: student.name,
-        rollNo: student.rollNo,
-        semester: student.semester,
-        totalFee: totalFee || 50000,
-        paidAmount: 0,
-        remainingAmount: totalFee || 50000,
-        feeBreakdown: feeBreakdown || [
-          {
-            type: 'Tuition Fee',
-            amount: 30000,
-            paid: 0,
-            remaining: 30000
-          },
-          {
-            type: 'Library Fee',
-            amount: 5000,
-            paid: 0,
-            remaining: 5000
-          },
-          {
-            type: 'Lab Fee',
-            amount: 10000,
-            paid: 0,
-            remaining: 10000
-          },
-          {
-            type: 'Examination Fee',
-            amount: 5000,
-            paid: 0,
-            remaining: 5000
-          }
-        ],
-        paymentHistory: [],
-        createdAt: new Date(),
-        lastUpdated: new Date()
-      };
-      
-      if (!mockData.fees) {
-        mockData.fees = [];
-      }
-      mockData.fees.push(newFeeRecord);
-      
-      return res.status(201).json({ 
-        success: true, 
-        data: newFeeRecord,
-        message: 'Fee record created successfully'
+    const { student, semester, totalAmount, dueDate, feeType } = req.body;
+
+    if (!student || !semester || !totalAmount || !dueDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'student, semester, totalAmount and dueDate are required',
       });
     }
-    
-    res.json({ success: true, message: 'Fee record created' });
+
+    const studentDoc = await Student.findById(student);
+    if (!studentDoc) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    // Check for existing record for same student+semester+type
+    const existing = await Fee.findOne({ student, semester, feeType: feeType || 'Tuition' });
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'Fee record already exists for this student/semester/type',
+      });
+    }
+
+    const fee = await Fee.create({ student, semester, totalAmount, dueDate, feeType });
+    const populated = await Fee.findById(fee._id).populate('student', 'name rollNo');
+    res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// DELETE /api/fees/:feeId - Delete fee record (admin only)
-router.delete('/:feeId', protect, authorize('admin'), async (req, res) => {
+// PUT /api/fees/:id/payment — Record a payment transaction (admin only)
+router.put('/:id/payment', protect, authorize('admin'), async (req, res) => {
   try {
-    const { feeId } = req.params;
-    
-    if (global.mockDB) {
-      const mockData = global.mockDB;
-      const feeIndex = mockData.fees?.findIndex(f => f._id === feeId);
-      
-      if (feeIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Fee record not found' });
-      }
-      
-      const deletedFee = mockData.fees[feeIndex];
-      mockData.fees.splice(feeIndex, 1);
-      
-      return res.json({ 
-        success: true, 
-        message: 'Fee record deleted successfully',
-        data: deletedFee
-      });
+    const { amount, method, receiptNo, remarks } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'A valid payment amount is required' });
     }
-    
-    res.json({ success: true, message: 'Fee record deleted' });
+
+    const fee = await Fee.findById(req.params.id);
+    if (!fee) return res.status(404).json({ success: false, message: 'Fee record not found' });
+
+    fee.transactions.push({ amount, method: method || 'Cash', receiptNo, remarks });
+    fee.paidAmount += amount;
+
+    // Auto-update status
+    if (fee.paidAmount >= fee.totalAmount) {
+      fee.status = 'Paid';
+    } else if (fee.paidAmount > 0) {
+      fee.status = 'Partial';
+    }
+
+    await fee.save();
+
+    const populated = await Fee.findById(fee._id).populate('student', 'name rollNo');
+
+    // Emit real-time update
+    if (req.io) {
+      req.io.emit('fee-updated', { studentId: fee.student, feeData: populated });
+    }
+
+    res.json({ success: true, data: populated, message: 'Payment recorded successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE /api/fees/:id (admin only)
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+  try {
+    const fee = await Fee.findByIdAndDelete(req.params.id);
+    if (!fee) return res.status(404).json({ success: false, message: 'Fee record not found' });
+    res.json({ success: true, message: 'Fee record deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

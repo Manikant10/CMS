@@ -104,7 +104,6 @@
   "devDependencies": {
     "nodemon": "^3.0.1",
     "serve": "^14.2.1",
-    "web-bundle-analyzer": "^0.18.0",
     "lighthouse": "^11.0.0",
     "workbox-cli": "^7.0.0"
   },

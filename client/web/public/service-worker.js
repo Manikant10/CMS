@@ -1,6 +1,6 @@
 // BIT CMS Service Worker for PWA functionality
 
-const CACHE_NAME = 'bit-cms-v2';
+const CACHE_NAME = 'bit-cms-v3';
 const urlsToCache = [
   '/',
   '/offline.html',
@@ -24,6 +24,7 @@ self.addEventListener('install', event => {
         console.log('SW: Failed to cache app shell:', error);
       })
   );
+  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
@@ -42,6 +43,7 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  event.waitUntil(self.clients.claim());
 });
 
 // Fetch event - serve from cache, fallback to network
@@ -50,6 +52,22 @@ self.addEventListener('fetch', event => {
 
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // Network-first for HTML documents to avoid stale UI after deployments.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('/offline.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then(response => {

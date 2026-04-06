@@ -630,12 +630,27 @@ function AdminDashboard() {
 
   const handleAddCourse = async () => {
     try {
+      const payload = {
+        ...courseForm,
+        code: (courseForm.code || '').trim().toUpperCase(),
+        name: (courseForm.name || '').trim(),
+        semester: Number(courseForm.semester),
+        credits: Number(courseForm.credits),
+        type: courseForm.type || 'Theory',
+        room: (courseForm.room || '').trim(),
+        description: (courseForm.description || '').trim()
+      };
+
+      if (!payload.faculty) {
+        delete payload.faculty;
+      }
+
       const response = await apiCall('/api/courses', {
         method: 'POST',
-        body: JSON.stringify(courseForm)
+        body: JSON.stringify(payload)
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.success) {
         setShowAddCourseModal(false);
         setCourseForm({
           name: '',
@@ -650,22 +665,37 @@ function AdminDashboard() {
         fetchCourses();
         fetchAdminData();
       } else {
-        alert(data.message || 'Failed to add course');
+        alert(data.message || `Failed to add course (HTTP ${response.status})`);
       }
     } catch (error) {
       console.error('Error adding course:', error);
-      alert('Failed to add course');
+      alert(error.message || 'Failed to add course');
     }
   };
 
   const handleUpdateCourse = async () => {
     try {
+      const payload = {
+        ...courseForm,
+        code: (courseForm.code || '').trim().toUpperCase(),
+        name: (courseForm.name || '').trim(),
+        semester: Number(courseForm.semester),
+        credits: Number(courseForm.credits),
+        type: courseForm.type || 'Theory',
+        room: (courseForm.room || '').trim(),
+        description: (courseForm.description || '').trim()
+      };
+
+      if (!payload.faculty) {
+        delete payload.faculty;
+      }
+
       const response = await apiCall(`/api/courses/${editingCourse._id}`, {
         method: 'PUT',
-        body: JSON.stringify(courseForm)
+        body: JSON.stringify(payload)
       });
-      const data = await response.json();
-      if (data.success) {
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.success) {
         setEditingCourse(null);
         setCourseForm({
           name: '',
@@ -679,11 +709,11 @@ function AdminDashboard() {
         });
         fetchCourses();
       } else {
-        alert(data.message || 'Failed to update course');
+        alert(data.message || `Failed to update course (HTTP ${response.status})`);
       }
     } catch (error) {
       console.error('Error updating course:', error);
-      alert('Failed to update course');
+      alert(error.message || 'Failed to update course');
     }
   };
 
@@ -695,7 +725,7 @@ function AdminDashboard() {
       semester: course.semester,
       credits: course.credits,
       type: course.type,
-      faculty: course.faculty || '',
+      faculty: course.faculty?._id || course.faculty || '',
       room: course.room || '',
       description: course.description || ''
     });
@@ -1369,7 +1399,7 @@ function AdminDashboard() {
               <p><strong>Semester:</strong> {course.semester}</p>
               <p><strong>Credits:</strong> {course.credits}</p>
               <p><strong>Type:</strong> {course.type}</p>
-              <p><strong>Faculty:</strong> {course.faculty || 'Not Assigned'}</p>
+              <p><strong>Faculty:</strong> {course.faculty?.name || 'Not Assigned'}</p>
               <p><strong>Room:</strong> {course.room || 'Not Assigned'}</p>
               {course.description && (
                 <p><strong>Description:</strong> {course.description}</p>
@@ -1465,9 +1495,9 @@ function AdminDashboard() {
                     required
                   >
                     <option value="">Select Type</option>
-                    <option value="theory">Theory</option>
-                    <option value="lab">Lab</option>
-                    <option value="elective">Elective</option>
+                    <option value="Theory">Theory</option>
+                    <option value="Lab">Lab</option>
+                    <option value="Elective">Elective</option>
                   </select>
                 </div>
                 <div className="input-group">

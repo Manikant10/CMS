@@ -339,12 +339,25 @@ function AdminDashboard() {
 
   const handleAddStudent = async () => {
     try {
+      if (!studentForm.email?.trim()) {
+        alert('Student email is required');
+        return;
+      }
+
+      const generatedPassword = generatePassword();
+      const payload = {
+        ...studentForm,
+        email: studentForm.email.trim().toLowerCase(),
+        semester: Number(studentForm.semester),
+        password: generatedPassword
+      };
+
       const response = await apiCall('/api/students', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(studentForm)
+        body: JSON.stringify(payload)
       });
       
       const data = await response.json();
@@ -360,7 +373,7 @@ function AdminDashboard() {
           section: '',
           batch: ''
         });
-        alert('Student added successfully!');
+        alert(`Student added successfully!\n\nLogin Credentials:\nUsername: ${payload.email}\nPassword: ${generatedPassword}\n\nPlease save these credentials securely.`);
       } else {
         alert('Failed to add student: ' + data.message);
       }
@@ -471,10 +484,16 @@ function AdminDashboard() {
 
   const handleAddFaculty = async () => {
     try {
+      if (!facultyForm.email?.trim()) {
+        alert('Faculty email is required');
+        return;
+      }
+
       // Generate login credentials
       const generatedPassword = generatePassword();
       const facultyData = {
         ...facultyForm,
+        email: facultyForm.email.trim().toLowerCase(),
         password: generatedPassword,
         isActive: true,
         isApproved: true,
@@ -953,12 +972,13 @@ function AdminDashboard() {
               </div>
               <div className="form-row">
                 <div className="input-group">
-                  <label>Email</label>
+                  <label>Email *</label>
                   <input
                     type="email"
                     name="email"
                     value={studentForm.email}
                     onChange={(e) => setStudentForm({...studentForm, email: e.target.value})}
+                    required
                   />
                 </div>
                 <div className="input-group">
@@ -1100,7 +1120,12 @@ function AdminDashboard() {
               <p><strong>Qualification:</strong> {facultyMember.qualification || '-'}</p>
               <p><strong>Experience:</strong> {facultyMember.experience || '0'} years</p>
               {facultyMember.specialization && (
-                <p><strong>Specialization:</strong> {facultyMember.specialization.join(', ')}</p>
+                <p>
+                  <strong>Specialization:</strong>{' '}
+                  {Array.isArray(facultyMember.specialization)
+                    ? facultyMember.specialization.join(', ')
+                    : facultyMember.specialization}
+                </p>
               )}
             </div>
             <div className="faculty-actions">
@@ -1157,12 +1182,13 @@ function AdminDashboard() {
               </div>
               <div className="form-row">
                 <div className="input-group">
-                  <label>Email</label>
+                  <label>Email *</label>
                   <input
                     type="email"
                     name="email"
                     value={facultyForm.email}
                     onChange={(e) => setFacultyForm({...facultyForm, email: e.target.value})}
+                    required
                   />
                 </div>
                 <div className="input-group">

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Student = require('../models/Student');
 const User    = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
@@ -141,14 +142,20 @@ const deactivateStudent = async (studentId, res) => {
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
     const userFilters = [{ profileId: student._id }];
-    if (student.userId) userFilters.push({ _id: student.userId });
+    if (student.userId && mongoose.isValidObjectId(student.userId)) {
+      userFilters.push({ _id: student.userId });
+    }
     if (student.email) userFilters.push({ email: student.email.toLowerCase() });
 
     // Deactivate any linked user account for this student record.
-    await User.updateMany(
-      { role: 'student', $or: userFilters },
-      { $set: { isActive: false } }
-    );
+    try {
+      await User.updateMany(
+        { role: 'student', $or: userFilters },
+        { $set: { isActive: false } }
+      );
+    } catch (userError) {
+      console.error('Student user deactivation warning:', userError.message);
+    }
 
     res.json({ success: true, message: 'Student deactivated successfully' });
   } catch (error) {
@@ -163,6 +170,11 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
 
 // POST /api/students/:id/deactivate — soft delete fallback for clients/proxies that block DELETE
 router.post('/:id/deactivate', protect, authorize('admin'), async (req, res) => {
+  await deactivateStudent(req.params.id, res);
+});
+
+// POST /api/students/:id/delete — compatibility alias for soft delete
+router.post('/:id/delete', protect, authorize('admin'), async (req, res) => {
   await deactivateStudent(req.params.id, res);
 });
 

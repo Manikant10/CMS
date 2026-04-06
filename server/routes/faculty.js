@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Faculty = require('../models/Faculty');
 const User    = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
@@ -123,13 +124,19 @@ const deactivateFaculty = async (facultyId, res) => {
     if (!faculty) return res.status(404).json({ success: false, message: 'Faculty not found' });
 
     const userFilters = [{ profileId: faculty._id }];
-    if (faculty.userId) userFilters.push({ _id: faculty.userId });
+    if (faculty.userId && mongoose.isValidObjectId(faculty.userId)) {
+      userFilters.push({ _id: faculty.userId });
+    }
     if (faculty.email) userFilters.push({ email: faculty.email.toLowerCase() });
 
-    await User.updateMany(
-      { role: 'faculty', $or: userFilters },
-      { $set: { isActive: false } }
-    );
+    try {
+      await User.updateMany(
+        { role: 'faculty', $or: userFilters },
+        { $set: { isActive: false } }
+      );
+    } catch (userError) {
+      console.error('Faculty user deactivation warning:', userError.message);
+    }
 
     res.json({ success: true, message: 'Faculty deactivated successfully' });
   } catch (error) {
@@ -144,6 +151,11 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
 
 // POST /api/faculty/:id/deactivate — soft delete fallback for clients/proxies that block DELETE
 router.post('/:id/deactivate', protect, authorize('admin'), async (req, res) => {
+  await deactivateFaculty(req.params.id, res);
+});
+
+// POST /api/faculty/:id/delete — compatibility alias for soft delete
+router.post('/:id/delete', protect, authorize('admin'), async (req, res) => {
   await deactivateFaculty(req.params.id, res);
 });
 

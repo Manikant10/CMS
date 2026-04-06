@@ -76,7 +76,7 @@ function StudentDashboard() {
         ) : (
           <div className="weekly-timetable">
             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day, dayIndex) => {
-              const dayTimetables = timetables.filter(t => t.day === dayIndex + 1);
+              const dayTimetables = timetables.filter(t => t.day === day || Number(t.day) === dayIndex + 1);
               return (
                 <div key={day} className="day-column">
                   <h4>{day}</h4>
@@ -84,7 +84,7 @@ function StudentDashboard() {
                     <div key={timetable._id} className="day-schedule">
                       {timetable.periods.map((period, index) => (
                         <div key={index} className="period-block">
-                          <div className="period-time">{period.time}</div>
+                          <div className="period-time">{period.time || `${period.startTime || ''}-${period.endTime || ''}`}</div>
                           <div className="period-info">
                             <p className="course-name">{period.course?.name || 'N/A'}</p>
                             <p className="faculty-name">{period.faculty?.name || 'N/A'}</p>

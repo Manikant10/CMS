@@ -158,4 +158,9 @@ router.post('/:id/deactivate', protect, authorize('admin'), async (req, res) => 
   await deactivateCourse(req.params.id, res);
 });
 
+// POST /api/courses/:id/delete — compatibility alias for soft delete
+router.post('/:id/delete', protect, authorize('admin'), async (req, res) => {
+  await deactivateCourse(req.params.id, res);
+});
+
 module.exports = router;

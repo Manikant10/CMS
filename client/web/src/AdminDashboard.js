@@ -42,7 +42,9 @@ function AdminDashboard() {
     periods: []
   });
   const [currentPeriod, setCurrentPeriod] = useState({
-    time: '',
+    startTime: '',
+    endTime: '',
+    type: 'Lecture',
     course: '',
     faculty: '',
     room: ''
@@ -93,6 +95,7 @@ function AdminDashboard() {
     'Information Technology'
   ];
   const { apiCall, user } = useAuth();
+  const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   // Student form state
   const [studentForm, setStudentForm] = useState({
@@ -237,7 +240,18 @@ function AdminDashboard() {
       const response = await apiCall('/api/timetable');
       const data = await response.json();
       if (data.success) {
-        setTimetables(data.data);
+        const dayIndex = (day) => WEEK_DAYS.indexOf(day);
+        const list = Array.isArray(data.data) ? [...data.data] : [];
+        list.sort((a, b) => {
+          const semDiff = Number(a.semester || 0) - Number(b.semester || 0);
+          if (semDiff !== 0) return semDiff;
+
+          const dayDiff = dayIndex(a.day) - dayIndex(b.day);
+          if (dayDiff !== 0) return dayDiff;
+
+          return String(a.section || '').localeCompare(String(b.section || ''));
+        });
+        setTimetables(list);
       }
     } catch (error) {
       console.error('Error fetching timetables:', error);
@@ -502,7 +516,14 @@ function AdminDashboard() {
     }
   };
 
-  const deactivateWithFallback = async ({ deactivatePath, deletePath, entityLabel }) => {
+  const deactivateWithFallback = async ({
+    deactivatePath,
+    deletePath,
+    deleteAliasPath,
+    updatePath,
+    updateBody,
+    entityLabel
+  }) => {
     let response = await apiCall(deactivatePath, { method: 'POST' });
     let data = await parseResponseSafe(response);
 
@@ -511,6 +532,22 @@ function AdminDashboard() {
     // Backward compatibility: older deployments may only expose DELETE routes.
     if (response.status === 404 || response.status === 405) {
       response = await apiCall(deletePath, { method: 'DELETE' });
+      data = await parseResponseSafe(response);
+      if (response.ok && data.success) return { success: true, data };
+    }
+
+    if (deleteAliasPath) {
+      response = await apiCall(deleteAliasPath, { method: 'POST' });
+      data = await parseResponseSafe(response);
+      if (response.ok && data.success) return { success: true, data };
+    }
+
+    // Last fallback: mark as inactive via generic update route.
+    if (updatePath) {
+      response = await apiCall(updatePath, {
+        method: 'PUT',
+        body: JSON.stringify(updateBody || { isActive: false })
+      });
       data = await parseResponseSafe(response);
       if (response.ok && data.success) return { success: true, data };
     }
@@ -532,6 +569,9 @@ function AdminDashboard() {
         const result = await deactivateWithFallback({
           deactivatePath: `/api/students/${deleteTarget.id}/deactivate`,
           deletePath: `/api/students/${deleteTarget.id}`,
+          deleteAliasPath: `/api/students/${deleteTarget.id}/delete`,
+          updatePath: `/api/students/${deleteTarget.id}`,
+          updateBody: { isActive: false },
           entityLabel: 'student'
         });
         if (result.success) {
@@ -543,6 +583,9 @@ function AdminDashboard() {
         const result = await deactivateWithFallback({
           deactivatePath: `/api/faculty/${deleteTarget.id}/deactivate`,
           deletePath: `/api/faculty/${deleteTarget.id}`,
+          deleteAliasPath: `/api/faculty/${deleteTarget.id}/delete`,
+          updatePath: `/api/faculty/${deleteTarget.id}`,
+          updateBody: { isActive: false },
           entityLabel: 'faculty'
         });
         if (result.success) {
@@ -554,6 +597,9 @@ function AdminDashboard() {
         const result = await deactivateWithFallback({
           deactivatePath: `/api/courses/${deleteTarget.id}/deactivate`,
           deletePath: `/api/courses/${deleteTarget.id}`,
+          deleteAliasPath: `/api/courses/${deleteTarget.id}/delete`,
+          updatePath: `/api/courses/${deleteTarget.id}`,
+          updateBody: { isActive: false },
           entityLabel: 'course'
         });
         if (result.success) {
@@ -852,9 +898,36 @@ function AdminDashboard() {
 
   const handleAddTimetable = async () => {
     try {
+      const payload = {
+        semester: Number(timetableForm.semester),
+        section: String(timetableForm.section || 'A').trim().toUpperCase(),
+        day: timetableForm.day,
+        periods: timetableForm.periods.map((period) => ({
+          startTime: period.startTime || '',
+          endTime: period.endTime || '',
+          type: period.type || 'Lecture',
+          course: period.course || undefined,
+          faculty: period.faculty || undefined,
+          room: period.room || '',
+        }))
+      };
+
+      if (!payload.semester || !payload.day) {
+        alert('Semester and day are required');
+        return;
+      }
+      if (!payload.section) {
+        alert('Section is required');
+        return;
+      }
+      if (!payload.periods.length) {
+        alert('Add at least one period');
+        return;
+      }
+
       const response = await apiCall('/api/timetable', {
         method: 'POST',
-        body: JSON.stringify(timetableForm)
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (data.success) {
@@ -866,7 +939,9 @@ function AdminDashboard() {
           periods: []
         });
         setCurrentPeriod({
-          time: '',
+          startTime: '',
+          endTime: '',
+          type: 'Lecture',
           course: '',
           faculty: '',
           room: ''
@@ -882,20 +957,42 @@ function AdminDashboard() {
   };
 
   const addPeriod = () => {
-    if (currentPeriod.time && currentPeriod.course && currentPeriod.faculty && currentPeriod.room) {
-      setTimetableForm({
-        ...timetableForm,
-        periods: [...timetableForm.periods, { ...currentPeriod }]
-      });
-      setCurrentPeriod({
-        time: '',
-        course: '',
-        faculty: '',
-        room: ''
-      });
-    } else {
-      alert('Please fill all period details');
+    if (!currentPeriod.startTime || !currentPeriod.endTime) {
+      alert('Start time and end time are required');
+      return;
     }
+
+    if (currentPeriod.startTime >= currentPeriod.endTime) {
+      alert('End time must be later than start time');
+      return;
+    }
+
+    const isBreak = currentPeriod.type === 'Break';
+    if (!isBreak && (!currentPeriod.course || !currentPeriod.faculty || !currentPeriod.room)) {
+      alert('Please fill course, faculty and room for non-break periods');
+      return;
+    }
+
+    const period = {
+      startTime: currentPeriod.startTime,
+      endTime: currentPeriod.endTime,
+      type: currentPeriod.type || 'Lecture',
+      room: currentPeriod.room || '',
+      ...(isBreak ? {} : { course: currentPeriod.course, faculty: currentPeriod.faculty }),
+    };
+
+    setTimetableForm({
+      ...timetableForm,
+      periods: [...timetableForm.periods, period]
+    });
+    setCurrentPeriod({
+      startTime: '',
+      endTime: '',
+      type: 'Lecture',
+      course: '',
+      faculty: '',
+      room: ''
+    });
   };
 
   const removePeriod = (index) => {
@@ -903,6 +1000,29 @@ function AdminDashboard() {
       ...timetableForm,
       periods: timetableForm.periods.filter((_, i) => i !== index)
     });
+  };
+
+  const handleDeleteTimetable = async (entryId) => {
+    if (!window.confirm('Delete this timetable entry?')) return;
+
+    try {
+      let response = await apiCall(`/api/timetable/${entryId}`, { method: 'DELETE' });
+      let data = await parseResponseSafe(response);
+
+      if (!(response.ok && data.success) && (response.status === 404 || response.status === 405)) {
+        response = await apiCall(`/api/timetable/${entryId}/delete`, { method: 'POST' });
+        data = await parseResponseSafe(response);
+      }
+
+      if (response.ok && data.success) {
+        fetchTimetables();
+      } else {
+        alert(data.message || `Failed to delete timetable (HTTP ${response.status})`);
+      }
+    } catch (error) {
+      console.error('Error deleting timetable:', error);
+      alert('Failed to delete timetable');
+    }
   };
 
   const handleProfileUpdate = async () => {
@@ -1842,16 +1962,26 @@ function AdminDashboard() {
           <div key={timetable._id} className="timetable-card">
             <div className="timetable-header">
               <h4>Semester {timetable.semester} - Section {timetable.section}</h4>
-              <span className="day-badge">{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][timetable.day - 1]}</span>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span className="day-badge">{timetable.day || '-'}</span>
+                <button
+                  type="button"
+                  className="action-button secondary"
+                  onClick={() => handleDeleteTimetable(timetable._id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
             <div className="periods-list">
               {timetable.periods.map((period, index) => (
                 <div key={index} className="period-item">
-                  <div className="period-time">{period.time}</div>
+                  <div className="period-time">{`${period.startTime || ''} - ${period.endTime || ''}`.trim() || period.time || '-'}</div>
                   <div className="period-details">
+                    <p><strong>Type:</strong> {period.type || 'Lecture'}</p>
                     <p><strong>Course:</strong> {period.course?.name || 'N/A'}</p>
                     <p><strong>Faculty:</strong> {period.faculty?.name || 'N/A'}</p>
-                    <p><strong>Room:</strong> {period.room}</p>
+                    <p><strong>Room:</strong> {period.room || '-'}</p>
                   </div>
                 </div>
               ))}
@@ -1912,8 +2042,8 @@ function AdminDashboard() {
                     required
                   >
                     <option value="">Select Day</option>
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day, index) => (
-                      <option key={day} value={index + 1}>{day}</option>
+                    {WEEK_DAYS.map((day) => (
+                      <option key={day} value={day}>{day}</option>
                     ))}
                   </select>
                 </div>
@@ -1925,10 +2055,18 @@ function AdminDashboard() {
                 {timetableForm.periods.map((period, index) => (
                   <div key={index} className="period-item">
                     <div className="period-info">
-                      <span className="period-time">{period.time}</span>
-                      <span className="period-course">{courses.find(c => c._id === period.course)?.name || 'N/A'}</span>
-                      <span className="period-faculty">{faculty.find(f => f._id === period.faculty)?.name || 'N/A'}</span>
-                      <span className="period-room">{period.room}</span>
+                      <span className="period-time">{`${period.startTime || ''}-${period.endTime || ''}`}</span>
+                      <span className="period-course">
+                        {period.type === 'Break'
+                          ? 'Break'
+                          : (courses.find(c => c._id === period.course)?.name || period.course?.name || 'N/A')}
+                      </span>
+                      <span className="period-faculty">
+                        {period.type === 'Break'
+                          ? '-'
+                          : (faculty.find(f => f._id === period.faculty)?.name || period.faculty?.name || 'N/A')}
+                      </span>
+                      <span className="period-room">{period.room || '-'}</span>
                     </div>
                     <button 
                       type="button" 
@@ -1944,19 +2082,40 @@ function AdminDashboard() {
                   <h5>Add New Period</h5>
                   <div className="form-row">
                     <div className="input-group">
-                      <label>Time</label>
+                      <label>Start Time</label>
                       <input
-                        type="text"
-                        placeholder="e.g., 09:00-10:30"
-                        value={currentPeriod.time}
-                        onChange={(e) => setCurrentPeriod({...currentPeriod, time: e.target.value})}
+                        type="time"
+                        value={currentPeriod.startTime}
+                        onChange={(e) => setCurrentPeriod({...currentPeriod, startTime: e.target.value})}
                       />
+                    </div>
+                    <div className="input-group">
+                      <label>End Time</label>
+                      <input
+                        type="time"
+                        value={currentPeriod.endTime}
+                        onChange={(e) => setCurrentPeriod({...currentPeriod, endTime: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="input-group">
+                      <label>Type</label>
+                      <select
+                        value={currentPeriod.type}
+                        onChange={(e) => setCurrentPeriod({...currentPeriod, type: e.target.value})}
+                      >
+                        {['Lecture', 'Lab', 'Tutorial', 'Break'].map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="input-group">
                       <label>Course</label>
                       <select
                         value={currentPeriod.course}
                         onChange={(e) => setCurrentPeriod({...currentPeriod, course: e.target.value})}
+                        disabled={currentPeriod.type === 'Break'}
                       >
                         <option value="">Select Course</option>
                         {courses.map(course => (
@@ -1971,6 +2130,7 @@ function AdminDashboard() {
                       <select
                         value={currentPeriod.faculty}
                         onChange={(e) => setCurrentPeriod({...currentPeriod, faculty: e.target.value})}
+                        disabled={currentPeriod.type === 'Break'}
                       >
                         <option value="">Select Faculty</option>
                         {faculty.map(fac => (
@@ -2014,7 +2174,9 @@ function AdminDashboard() {
                       periods: []
                     });
                     setCurrentPeriod({
-                      time: '',
+                      startTime: '',
+                      endTime: '',
+                      type: 'Lecture',
                       course: '',
                       faculty: '',
                       room: ''

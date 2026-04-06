@@ -25,10 +25,12 @@ function Students() {
     try {
       setLoading(true);
       setError('');
+      const semester = Number(user?.semester) || 1;
+      const section = String(user?.section || 'A').trim().toUpperCase();
 
       const [overviewRes, timetableRes, feesRes, noticesRes, attendanceRes] = await Promise.all([
         apiCall(`${apiConfig.endpoints.dashboard}/overview`),
-        apiCall(`${apiConfig.baseURL}/api/timetable?semester=1&section=A`),
+        apiCall(`/api/timetable?semester=${semester}&section=${encodeURIComponent(section)}`),
         apiCall(`${apiConfig.baseURL}/api/fees/student/${studentId}`),
         apiCall(`${apiConfig.endpoints.notices}?limit=5`),
         apiCall(`/api/attendance/student/${studentId}`),
@@ -109,7 +111,7 @@ function Students() {
                 <div className="day-header">{day.toUpperCase()}</div>
                 {daySchedule.periods.map((p, idx) => (
                   <div key={idx} className="period-item">
-                    <span className="time">{p.time}</span>
+                    <span className="time">{p.time || `${p.startTime || ''}-${p.endTime || ''}`}</span>
                     <span className="course">{p.course?.name || 'BREAK'}</span>
                     <span className="room">{p.room || 'N/A'}</span>
                   </div>

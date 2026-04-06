@@ -133,6 +133,16 @@ function AdminDashboard() {
     room: '',
     description: ''
   });
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [attendanceSummary, setAttendanceSummary] = useState([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceFilters, setAttendanceFilters] = useState({
+    courseId: '',
+    studentId: '',
+    facultyId: '',
+    startDate: '',
+    endDate: ''
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -252,6 +262,37 @@ function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching courses and faculty:', error);
+    }
+  };
+
+  const fetchAttendanceReport = async (filters = attendanceFilters) => {
+    try {
+      setAttendanceLoading(true);
+
+      const params = new URLSearchParams();
+      if (filters.courseId) params.append('courseId', filters.courseId);
+      if (filters.studentId) params.append('studentId', filters.studentId);
+      if (filters.facultyId) params.append('facultyId', filters.facultyId);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+
+      const query = params.toString();
+      const response = await apiCall(`/api/attendance/report${query ? `?${query}` : ''}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setAttendanceRecords(data.data || []);
+        setAttendanceSummary(data.summary || []);
+      } else {
+        setAttendanceRecords([]);
+        setAttendanceSummary([]);
+      }
+    } catch (error) {
+      console.error('Error fetching attendance report:', error);
+      setAttendanceRecords([]);
+      setAttendanceSummary([]);
+    } finally {
+      setAttendanceLoading(false);
     }
   };
 
@@ -938,13 +979,18 @@ function AdminDashboard() {
       fetchCourses();
     } else if (activeTab === 'approvals') {
       fetchPendingRegistrations();
+    } else if (activeTab === 'attendance') {
+      fetchCourses();
+      fetchStudents();
+      fetchFaculty();
+      fetchAttendanceReport();
     } else if (activeTab === 'timetable') {
       fetchTimetables();
       fetchCoursesAndFaculty();
     } else if (activeTab === 'fees') {
       fetchFees();
     }
-  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchPendingRegistrations, fetchStudents, fetchTimetables]);
+  }, [activeTab, apiCall, fetchAttendanceReport, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchPendingRegistrations, fetchStudents, fetchTimetables]);
 
   const renderStudents = () => (
     <div className="tab-content">
@@ -1196,7 +1242,7 @@ function AdminDashboard() {
       <div className="faculty-grid">
         {faculty.map((facultyMember) => (
           <div key={facultyMember._id} className="faculty-card">
-            <div className="faculty-avatar">👨‍🏫</div>
+            <div className="faculty-avatar">FAC</div>
             <div className="faculty-info">
               <h4>{facultyMember.name}</h4>
               <p><strong>ID:</strong> {facultyMember.empId}</p>
@@ -1958,6 +2004,192 @@ function AdminDashboard() {
     </div>
   );
 
+  const renderAttendance = () => {
+    const total = attendanceSummary.reduce((sum, item) => sum + (item.total || 0), 0);
+    const present = attendanceSummary.reduce((sum, item) => sum + (item.present || 0), 0);
+    const late = attendanceSummary.reduce((sum, item) => sum + (item.late || 0), 0);
+    const absent = attendanceSummary.reduce((sum, item) => sum + (item.absent || 0), 0);
+    const percentage = total > 0 ? (((present + late) / total) * 100).toFixed(1) : '0.0';
+
+    const applyFilters = () => {
+      fetchAttendanceReport(attendanceFilters);
+    };
+
+    const clearFilters = () => {
+      const cleared = {
+        courseId: '',
+        studentId: '',
+        facultyId: '',
+        startDate: '',
+        endDate: ''
+      };
+      setAttendanceFilters(cleared);
+      fetchAttendanceReport(cleared);
+    };
+
+    return (
+      <div className="tab-content attendance-management">
+        <div className="section-header">
+          <h3 className="futuristic-title">Attendance Monitoring</h3>
+          <button className="action-button secondary" onClick={() => fetchAttendanceReport()}>
+            Refresh Report
+          </button>
+        </div>
+
+        <div className="filter-controls" style={{ flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <select
+            value={attendanceFilters.facultyId}
+            onChange={(e) => setAttendanceFilters({ ...attendanceFilters, facultyId: e.target.value })}
+          >
+            <option value="">All Faculty</option>
+            {faculty.map((fac) => (
+              <option key={fac._id} value={fac._id}>
+                {fac.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={attendanceFilters.courseId}
+            onChange={(e) => setAttendanceFilters({ ...attendanceFilters, courseId: e.target.value })}
+          >
+            <option value="">All Courses</option>
+            {courses.map((course) => (
+              <option key={course._id} value={course._id}>
+                {course.code ? `${course.code} - ${course.name}` : course.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={attendanceFilters.studentId}
+            onChange={(e) => setAttendanceFilters({ ...attendanceFilters, studentId: e.target.value })}
+          >
+            <option value="">All Students</option>
+            {students.map((student) => (
+              <option key={student._id} value={student._id}>
+                {student.rollNo ? `${student.rollNo} - ${student.name}` : student.name}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            value={attendanceFilters.startDate}
+            onChange={(e) => setAttendanceFilters({ ...attendanceFilters, startDate: e.target.value })}
+          />
+          <input
+            type="date"
+            value={attendanceFilters.endDate}
+            onChange={(e) => setAttendanceFilters({ ...attendanceFilters, endDate: e.target.value })}
+          />
+        </div>
+
+        <div className="attendance-actions" style={{ justifyContent: 'flex-start' }}>
+          <button className="action-button primary" onClick={applyFilters}>Apply Filters</button>
+          <button className="action-button secondary" onClick={clearFilters}>Clear Filters</button>
+        </div>
+
+        {attendanceLoading ? (
+          <div className="empty-message">Loading attendance report...</div>
+        ) : (
+          <>
+            <div className="attendance-summary">
+              <div className="summary-card">
+                <h4>Overall Attendance</h4>
+                <div className="percentage">{percentage}%</div>
+                <p>{present + late}/{total} present or late</p>
+              </div>
+              <div className="summary-card">
+                <h4>Present</h4>
+                <div className="conducted">{present}</div>
+                <p>Marked present</p>
+              </div>
+              <div className="summary-card">
+                <h4>Late</h4>
+                <div className="conducted">{late}</div>
+                <p>Marked late</p>
+              </div>
+              <div className="summary-card">
+                <h4>Absent</h4>
+                <div className="conducted">{absent}</div>
+                <p>Marked absent</p>
+              </div>
+            </div>
+
+            <div className="dashboard-section">
+              <h3>Student-wise Summary</h3>
+              {attendanceSummary.length === 0 ? (
+                <div className="empty-message">No attendance summary found for selected filters.</div>
+              ) : (
+                <div className="students-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Roll No</th>
+                        <th>Total</th>
+                        <th>Present</th>
+                        <th>Late</th>
+                        <th>Absent</th>
+                        <th>Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendanceSummary.map((item) => (
+                        <tr key={item.student?._id || `${item.student?.rollNo}-${item.student?.name}`}>
+                          <td>{item.student?.name || '-'}</td>
+                          <td>{item.student?.rollNo || '-'}</td>
+                          <td>{item.total}</td>
+                          <td>{item.present}</td>
+                          <td>{item.late}</td>
+                          <td>{item.absent}</td>
+                          <td>{item.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="dashboard-section">
+              <h3>Recent Attendance Entries</h3>
+              {attendanceRecords.length === 0 ? (
+                <div className="empty-message">No attendance entries found.</div>
+              ) : (
+                <div className="students-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Marked By</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendanceRecords.slice(0, 200).map((record) => (
+                        <tr key={record._id}>
+                          <td>{new Date(record.date).toLocaleDateString('en-IN')}</td>
+                          <td>{record.student?.name || '-'}</td>
+                          <td>{record.course?.code ? `${record.course.code} - ${record.course.name}` : (record.course?.name || '-')}</td>
+                          <td>{record.markedBy?.name || '-'}</td>
+                          <td style={{ textTransform: 'capitalize' }}>{record.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const renderFees = () => (
     <div className="tab-content">
       <div className="section-header">
@@ -1982,15 +2214,15 @@ function AdminDashboard() {
               <div className="fee-summary">
                 <div className="total-fee">
                   <span className="label">Total Fee:</span>
-                  <span className="amount">₹{fee.totalFee.toLocaleString()}</span>
+                  <span className="amount">INR {fee.totalFee.toLocaleString()}</span>
                 </div>
                 <div className="paid-fee">
                   <span className="label">Paid:</span>
-                  <span className="amount paid">₹{fee.paidAmount.toLocaleString()}</span>
+                  <span className="amount paid">INR {fee.paidAmount.toLocaleString()}</span>
                 </div>
                 <div className="remaining-fee">
                   <span className="label">Remaining:</span>
-                  <span className="amount remaining">₹{fee.remainingAmount.toLocaleString()}</span>
+                  <span className="amount remaining">INR {fee.remainingAmount.toLocaleString()}</span>
                 </div>
               </div>
               <div className="progress-bar">
@@ -2080,9 +2312,9 @@ function AdminDashboard() {
             <div className="payment-info">
               <h4>{selectedFee.studentName} - {selectedFee.rollNo}</h4>
               <div className="current-status">
-                <span>Total: ₹{selectedFee.totalFee.toLocaleString()}</span>
-                <span>Paid: ₹{selectedFee.paidAmount.toLocaleString()}</span>
-                <span>Remaining: ₹{selectedFee.remainingAmount.toLocaleString()}</span>
+                <span>Total: INR {selectedFee.totalFee.toLocaleString()}</span>
+                <span>Paid: INR {selectedFee.paidAmount.toLocaleString()}</span>
+                <span>Remaining: INR {selectedFee.remainingAmount.toLocaleString()}</span>
               </div>
             </div>
             <form onSubmit={(e) => {
@@ -2183,56 +2415,63 @@ function AdminDashboard() {
           className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          <span className="tab-icon">📊</span>
+          <span className="tab-icon">OV</span>
           <span className="tab-label">Overview</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'students' ? 'active' : ''}`}
           onClick={() => setActiveTab('students')}
         >
-          <span className="tab-icon">👥</span>
+          <span className="tab-icon">ST</span>
           <span className="tab-label">Students</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'faculty' ? 'active' : ''}`}
           onClick={() => setActiveTab('faculty')}
         >
-          <span className="tab-icon">👨‍🏫</span>
+          <span className="tab-icon">FC</span>
           <span className="tab-label">Faculty</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
         >
-          <span className="tab-icon">📚</span>
+          <span className="tab-icon">CR</span>
           <span className="tab-label">Courses</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'approvals' ? 'active' : ''}`}
           onClick={() => setActiveTab('approvals')}
         >
-          <span className="tab-icon">✅</span>
+          <span className="tab-icon">AP</span>
           <span className="tab-label">Approvals</span>
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attendance')}
+        >
+          <span className="tab-icon">AT</span>
+          <span className="tab-label">Attendance</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'timetable' ? 'active' : ''}`}
           onClick={() => setActiveTab('timetable')}
         >
-          <span className="tab-icon">📅</span>
+          <span className="tab-icon">TT</span>
           <span className="tab-label">Timetable</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'fees' ? 'active' : ''}`}
           onClick={() => setActiveTab('fees')}
         >
-          <span className="tab-icon">💰</span>
+          <span className="tab-icon">FE</span>
           <span className="tab-label">Fees</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
-          <span className="tab-icon">⚙️</span>
+          <span className="tab-icon">SG</span>
           <span className="tab-label">Settings</span>
         </button>
       </div>
@@ -2243,6 +2482,7 @@ function AdminDashboard() {
         {activeTab === 'faculty' && renderFaculty()}
         {activeTab === 'courses' && renderCourses()}
         {activeTab === 'approvals' && renderApprovals()}
+        {activeTab === 'attendance' && renderAttendance()}
         {activeTab === 'timetable' && renderTimetable()}
         {activeTab === 'fees' && renderFees()}
         {activeTab === 'settings' && (

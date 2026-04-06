@@ -54,7 +54,7 @@ router.post('/', protect, authorize('admin', 'faculty'), async (req, res) => {
 // GET /api/attendance/report — Filtered attendance report (admin & faculty)
 router.get('/report', protect, authorize('admin', 'faculty'), async (req, res) => {
   try {
-    const { courseId, studentId, startDate, endDate } = req.query;
+    const { courseId, studentId, facultyId, startDate, endDate } = req.query;
     const query = {};
 
     if (courseId)  query.course  = courseId;
@@ -66,14 +66,17 @@ router.get('/report', protect, authorize('admin', 'faculty'), async (req, res) =
       if (endDate)   query.date.$lte = new Date(endDate);
     }
 
-    // Faculty can only view their own courses' attendance
+    // Faculty can only view their own marked attendance
     if (req.user.role === 'faculty') {
       query.markedBy = req.user.profileId;
+    } else if (facultyId) {
+      query.markedBy = facultyId;
     }
 
     const records = await Attendance.find(query)
       .populate('student', 'name rollNo semester section')
       .populate('course',  'name code')
+      .populate('markedBy', 'name empId')
       .sort({ date: -1 })
       .limit(1000);
 

@@ -97,7 +97,8 @@ function AdminDashboard() {
     batch: '',
     address: '',
     guardianName: '',
-    guardianPhone: ''
+    guardianPhone: '',
+    password: ''
   });
 
   // Faculty form state
@@ -109,7 +110,8 @@ function AdminDashboard() {
     department: '',
     qualification: '',
     experience: '',
-    specialization: ''
+    specialization: '',
+    password: ''
   });
 
   // Course form state
@@ -344,12 +346,18 @@ function AdminDashboard() {
         return;
       }
 
-      const generatedPassword = generatePassword();
+      const adminPassword = (studentForm.password || '').trim();
+      const passwordToUse = adminPassword || generatePassword();
+      if (passwordToUse.length < 8) {
+        alert('Student password must be at least 8 characters');
+        return;
+      }
+
       const payload = {
         ...studentForm,
         email: studentForm.email.trim().toLowerCase(),
         semester: Number(studentForm.semester),
-        password: generatedPassword
+        password: passwordToUse
       };
 
       const response = await apiCall('/api/students', {
@@ -371,9 +379,13 @@ function AdminDashboard() {
           phone: '',
           semester: '',
           section: '',
-          batch: ''
+          batch: '',
+          address: '',
+          guardianName: '',
+          guardianPhone: '',
+          password: ''
         });
-        alert(`Student added successfully!\n\nLogin Credentials:\nUsername: ${payload.email}\nPassword: ${generatedPassword}\n\nPlease save these credentials securely.`);
+        alert(`Student added successfully!\n\nLogin Credentials:\nUsername: ${payload.email}\nPassword: ${passwordToUse}\n\nPlease save these credentials securely.`);
       } else {
         alert('Failed to add student: ' + data.message);
       }
@@ -402,7 +414,8 @@ function AdminDashboard() {
           batch: '',
           address: '',
           guardianName: '',
-          guardianPhone: ''
+          guardianPhone: '',
+          password: ''
         });
         fetchStudents();
       } else {
@@ -489,12 +502,17 @@ function AdminDashboard() {
         return;
       }
 
-      // Generate login credentials
-      const generatedPassword = generatePassword();
+      const adminPassword = (facultyForm.password || '').trim();
+      const passwordToUse = adminPassword || generatePassword();
+      if (passwordToUse.length < 8) {
+        alert('Faculty password must be at least 8 characters');
+        return;
+      }
+
       const facultyData = {
         ...facultyForm,
         email: facultyForm.email.trim().toLowerCase(),
-        password: generatedPassword,
+        password: passwordToUse,
         isActive: true,
         isApproved: true,
         approvedBy: 'admin',
@@ -509,8 +527,7 @@ function AdminDashboard() {
       if (data.success) {
         setShowAddFacultyModal(false);
         
-        // Show credentials to admin
-        alert(`Faculty added successfully!\n\nLogin Credentials:\nUsername: ${facultyForm.email}\nPassword: ${generatedPassword}\n\nPlease save these credentials securely.`);
+        alert(`Faculty added successfully!\n\nLogin Credentials:\nUsername: ${facultyData.email}\nPassword: ${passwordToUse}\n\nPlease save these credentials securely.`);
         
         setFacultyForm({
           name: '',
@@ -520,7 +537,8 @@ function AdminDashboard() {
           department: '',
           qualification: '',
           experience: '',
-          specialization: ''
+          specialization: '',
+          password: ''
         });
         fetchFaculty();
         fetchAdminData();
@@ -550,7 +568,8 @@ function AdminDashboard() {
           department: '',
           qualification: '',
           experience: '',
-          specialization: ''
+          specialization: '',
+          password: ''
         });
         fetchFaculty();
       } else {
@@ -574,7 +593,8 @@ function AdminDashboard() {
       batch: student.batch,
       address: student.address || '',
       guardianName: student.guardianName || '',
-      guardianPhone: student.guardianPhone || ''
+      guardianPhone: student.guardianPhone || '',
+      password: ''
     });
   };
 
@@ -588,7 +608,10 @@ function AdminDashboard() {
       department: faculty.department,
       qualification: faculty.qualification || '',
       experience: faculty.experience || '',
-      specialization: faculty.specialization ? faculty.specialization.join(', ') : ''
+      specialization: Array.isArray(faculty.specialization)
+        ? faculty.specialization.join(', ')
+        : (faculty.specialization || ''),
+      password: ''
     });
   };
 
@@ -991,6 +1014,20 @@ function AdminDashboard() {
                   />
                 </div>
               </div>
+              {!editingStudent && (
+                <div className="input-group">
+                  <label>Login Password</label>
+                  <input
+                    type="text"
+                    name="password"
+                    value={studentForm.password}
+                    onChange={(e) => setStudentForm({...studentForm, password: e.target.value})}
+                    minLength="8"
+                    placeholder="Leave empty to auto-generate"
+                  />
+                  <small>Admin can set password manually. Minimum 8 characters.</small>
+                </div>
+              )}
               <div className="form-row">
                 <div className="input-group">
                   <label>Semester *</label>
@@ -1081,7 +1118,8 @@ function AdminDashboard() {
                       batch: '',
                       address: '',
                       guardianName: '',
-                      guardianPhone: ''
+                      guardianPhone: '',
+                      password: ''
                     });
                   }}
                 >
@@ -1201,6 +1239,20 @@ function AdminDashboard() {
                   />
                 </div>
               </div>
+              {!editingFaculty && (
+                <div className="input-group">
+                  <label>Login Password</label>
+                  <input
+                    type="text"
+                    name="password"
+                    value={facultyForm.password}
+                    onChange={(e) => setFacultyForm({...facultyForm, password: e.target.value})}
+                    minLength="8"
+                    placeholder="Leave empty to auto-generate"
+                  />
+                  <small>Admin can set password manually. Minimum 8 characters.</small>
+                </div>
+              )}
               <div className="input-group">
                 <label>Department *</label>
                 <input
@@ -1261,7 +1313,8 @@ function AdminDashboard() {
                       department: '',
                       qualification: '',
                       experience: '',
-                      specialization: ''
+                      specialization: '',
+                      password: ''
                     });
                   }}
                 >

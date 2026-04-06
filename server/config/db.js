@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+mongoose.set('bufferCommands', false);
+
 let cached = global.__mongooseCache;
 if (!cached) {
   cached = global.__mongooseCache = { conn: null, promise: null };
@@ -10,7 +12,9 @@ const connectDB = async () => {
 
   try {
     if (!cached.promise) {
-      cached.promise = mongoose.connect(process.env.MONGODB_URI).catch((error) => {
+      cached.promise = mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+      }).catch((error) => {
         cached.promise = null;
         throw error;
       });

@@ -56,6 +56,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Ensure MongoDB is ready for all API requests to avoid Mongoose buffer timeouts.
+app.use(async (req, res, next) => {
+  if (!req.path.startsWith('/api')) return next();
+  try {
+    await connectDB();
+    return next();
+  } catch (error) {
+    console.error('MongoDB unavailable for request:', error.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Database unavailable. Please try again in a moment.',
+    });
+  }
+});
+
 // Attach io to every request
 app.use((req, _res, next) => { req.io = io; next(); });
 

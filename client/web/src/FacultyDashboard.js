@@ -237,9 +237,9 @@ function FacultyDashboard() {
   );
 
   const tabs = [
-    { id: 'overview',    label: 'Overview',    icon: 'OV' },
-    { id: 'timetable',   label: 'Timetable',   icon: 'TT' },
-    { id: 'attendance',  label: 'Attendance',  icon: 'AT' },
+    { id: 'overview',    label: 'Overview',    icon: '\u{1F4CA}' },
+    { id: 'timetable',   label: 'Timetable',   icon: '\u{1F4C5}' },
+    { id: 'attendance',  label: 'Attendance',  icon: '\u{1F4DD}' },
   ];
 
   return (

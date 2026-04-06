@@ -1269,7 +1269,7 @@ function AdminDashboard() {
       <div className="faculty-grid">
         {faculty.map((facultyMember) => (
           <div key={facultyMember._id} className="faculty-card">
-            <div className="faculty-avatar">FAC</div>
+            <div className="faculty-avatar">{'\u{1F468}\u200D\u{1F3EB}'}</div>
             <div className="faculty-info">
               <h4>{facultyMember.name}</h4>
               <p><strong>ID:</strong> {facultyMember.empId}</p>
@@ -2442,63 +2442,63 @@ function AdminDashboard() {
           className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          <span className="tab-icon">OV</span>
+          <span className="tab-icon">{'\u{1F4CA}'}</span>
           <span className="tab-label">Overview</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'students' ? 'active' : ''}`}
           onClick={() => setActiveTab('students')}
         >
-          <span className="tab-icon">ST</span>
+          <span className="tab-icon">{'\u{1F465}'}</span>
           <span className="tab-label">Students</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'faculty' ? 'active' : ''}`}
           onClick={() => setActiveTab('faculty')}
         >
-          <span className="tab-icon">FC</span>
+          <span className="tab-icon">{'\u{1F468}\u200D\u{1F3EB}'}</span>
           <span className="tab-label">Faculty</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'courses' ? 'active' : ''}`}
           onClick={() => setActiveTab('courses')}
         >
-          <span className="tab-icon">CR</span>
+          <span className="tab-icon">{'\u{1F4DA}'}</span>
           <span className="tab-label">Courses</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'approvals' ? 'active' : ''}`}
           onClick={() => setActiveTab('approvals')}
         >
-          <span className="tab-icon">AP</span>
+          <span className="tab-icon">{'\u2705'}</span>
           <span className="tab-label">Approvals</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
           onClick={() => setActiveTab('attendance')}
         >
-          <span className="tab-icon">AT</span>
+          <span className="tab-icon">{'\u{1F4DD}'}</span>
           <span className="tab-label">Attendance</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'timetable' ? 'active' : ''}`}
           onClick={() => setActiveTab('timetable')}
         >
-          <span className="tab-icon">TT</span>
+          <span className="tab-icon">{'\u{1F4C5}'}</span>
           <span className="tab-label">Timetable</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'fees' ? 'active' : ''}`}
           onClick={() => setActiveTab('fees')}
         >
-          <span className="tab-icon">FE</span>
+          <span className="tab-icon">{'\u{1F4B0}'}</span>
           <span className="tab-label">Fees</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
-          <span className="tab-icon">SG</span>
+          <span className="tab-icon">{'\u2699\uFE0F'}</span>
           <span className="tab-label">Settings</span>
         </button>
       </div>

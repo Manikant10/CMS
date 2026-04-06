@@ -131,11 +131,10 @@ router.put('/:id', protect, authorize('admin', 'faculty'), async (req, res) => {
   }
 });
 
-// DELETE /api/students/:id — soft delete
-router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+const deactivateStudent = async (studentId, res) => {
   try {
     const student = await Student.findByIdAndUpdate(
-      req.params.id,
+      studentId,
       { isActive: false },
       { new: true }
     );
@@ -155,6 +154,16 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// DELETE /api/students/:id — soft delete
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+  await deactivateStudent(req.params.id, res);
+});
+
+// POST /api/students/:id/deactivate — soft delete fallback for clients/proxies that block DELETE
+router.post('/:id/deactivate', protect, authorize('admin'), async (req, res) => {
+  await deactivateStudent(req.params.id, res);
 });
 
 module.exports = router;

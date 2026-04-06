@@ -461,8 +461,8 @@ function AdminDashboard() {
       }
 
       if (deleteTarget.type === 'student') {
-        const response = await apiCall(`/api/students/${deleteTarget.id}`, {
-          method: 'DELETE'
+        const response = await apiCall(`/api/students/${deleteTarget.id}/deactivate`, {
+          method: 'POST'
         });
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.success) {
@@ -472,8 +472,8 @@ function AdminDashboard() {
           alert(data.message || `Failed to delete student (HTTP ${response.status})`);
         }
       } else if (deleteTarget.type === 'faculty') {
-        const response = await apiCall(`/api/faculty/${deleteTarget.id}`, {
-          method: 'DELETE'
+        const response = await apiCall(`/api/faculty/${deleteTarget.id}/deactivate`, {
+          method: 'POST'
         });
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.success) {

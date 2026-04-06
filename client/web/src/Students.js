@@ -4,7 +4,7 @@ import apiConfig from './config/api';
 
 function Students() {
   const { user, apiCall } = useAuth();
-  const [overview,     setOverview]     = useState({});
+  const [, setOverview] = useState({});
   const [timetable,    setTimetable]    = useState([]);
   const [fees,         setFees]         = useState([]);
   const [notices,      setNotices]      = useState([]);
@@ -122,11 +122,11 @@ function Students() {
       ) : (
         fees.map(fee => (
           <div key={fee._id} className="fee-summary-card">
-            <h4>Semester {fee.semester} — {fee.feeType || 'Tuition'}</h4>
+            <h4>Semester {fee.semester} â€” {fee.feeType || 'Tuition'}</h4>
             <div className="fee-status-details">
-              <div><span className="label">Total:</span> ₹{(fee.totalAmount || 0).toLocaleString()}</div>
-              <div><span className="label">Paid:</span>  ₹{(fee.paidAmount  || 0).toLocaleString()}</div>
-              <div><span className="label">Due:</span>   ₹{((fee.totalAmount || 0) - (fee.paidAmount || 0)).toLocaleString()}</div>
+              <div><span className="label">Total:</span> â‚¹{(fee.totalAmount || 0).toLocaleString()}</div>
+              <div><span className="label">Paid:</span>  â‚¹{(fee.paidAmount  || 0).toLocaleString()}</div>
+              <div><span className="label">Due:</span>   â‚¹{((fee.totalAmount || 0) - (fee.paidAmount || 0)).toLocaleString()}</div>
             </div>
             <div className="progress-bar">
               <div
@@ -141,7 +141,7 @@ function Students() {
                 {fee.transactions.map((t, i) => (
                   <div key={i} className="payment-item">
                     <span>{new Date(t.date).toLocaleDateString('en-IN')}</span>
-                    <span>₹{(t.amount || 0).toLocaleString()}</span>
+                    <span>â‚¹{(t.amount || 0).toLocaleString()}</span>
                     <span>{t.method}</span>
                     {t.receiptNo && <span>#{t.receiptNo}</span>}
                   </div>
@@ -155,9 +155,9 @@ function Students() {
   );
 
   const tabs = [
-    { id: 'overview',  label: 'Overview',  icon: '📊' },
-    { id: 'timetable', label: 'Timetable', icon: '📅' },
-    { id: 'fees',      label: 'Fees',      icon: '💰' },
+    { id: 'overview',  label: 'Overview',  icon: 'ðŸ“Š' },
+    { id: 'timetable', label: 'Timetable', icon: 'ðŸ“…' },
+    { id: 'fees',      label: 'Fees',      icon: 'ðŸ’°' },
   ];
 
   return (
@@ -187,3 +187,4 @@ function Students() {
 }
 
 export default Students;
+

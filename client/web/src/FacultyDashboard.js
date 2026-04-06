@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './context/AuthContext';
-import apiConfig from './config/api';
 
 function FacultyDashboard() {
   const { user, apiCall } = useAuth();
@@ -119,9 +118,9 @@ function FacultyDashboard() {
               <div className="course-code">{course.code}</div>
               <div className="course-name">{course.name}</div>
               <div className="course-meta">
-                Sem {course.semester} · {course.credits} credits · {course.type}
+                Sem {course.semester} Â· {course.credits} credits Â· {course.type}
               </div>
-              {course.room && <div className="course-room">📍 {course.room}</div>}
+              {course.room && <div className="course-room">ðŸ“ {course.room}</div>}
             </div>
           ))
         )}
@@ -145,10 +144,10 @@ function FacultyDashboard() {
                 {dayEntries.flatMap(entry =>
                   entry.periods.map((p, idx) => (
                     <div key={idx} className={`period-item ${p.type?.toLowerCase() || 'lecture'}`}>
-                      <span className="time">{p.startTime}–{p.endTime}</span>
-                      <span className="course">{p.course?.name || '—'}</span>
+                      <span className="time">{p.startTime}â€“{p.endTime}</span>
+                      <span className="course">{p.course?.name || 'â€”'}</span>
                       <span className="room">{p.room || 'N/A'}</span>
-                      <span className="sem-section">Sem {entry.semester} · {entry.section}</span>
+                      <span className="sem-section">Sem {entry.semester} Â· {entry.section}</span>
                     </div>
                   ))
                 )}
@@ -178,15 +177,15 @@ function FacultyDashboard() {
             setSelectedCourse(c);
           }}
         >
-          <option value="">— Select Course —</option>
+          <option value="">â€” Select Course â€”</option>
           {courses.map(c => (
-            <option key={c._id} value={c._id}>{c.code} — {c.name}</option>
+            <option key={c._id} value={c._id}>{c.code} â€” {c.name}</option>
           ))}
         </select>
       </div>
 
       {attendanceError && <p className="error-msg">{attendanceError}</p>}
-      {attendanceSaved && <p className="success-msg">✅ Attendance saved successfully!</p>}
+      {attendanceSaved && <p className="success-msg">âœ… Attendance saved successfully!</p>}
 
       {selectedCourse && students.length > 0 && (
         <>
@@ -239,9 +238,9 @@ function FacultyDashboard() {
   );
 
   const tabs = [
-    { id: 'overview',    label: 'Overview',    icon: '📊' },
-    { id: 'timetable',   label: 'Timetable',   icon: '📅' },
-    { id: 'attendance',  label: 'Attendance',  icon: '✅' },
+    { id: 'overview',    label: 'Overview',    icon: 'ðŸ“Š' },
+    { id: 'timetable',   label: 'Timetable',   icon: 'ðŸ“…' },
+    { id: 'attendance',  label: 'Attendance',  icon: 'âœ…' },
   ];
 
   return (
@@ -271,3 +270,4 @@ function FacultyDashboard() {
 }
 
 export default FacultyDashboard;
+

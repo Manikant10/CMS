@@ -108,11 +108,31 @@ All follow standard REST patterns. See route files in `server/routes/`.
 
 ## Deployment
 
-### Vercel (Frontend)
-Set `REACT_APP_API_URL` to your backend URL in Vercel environment variables.
+### Vercel (Frontend + Backend as two projects)
 
-### Render / Railway / Heroku (Backend)
-Set all environment variables in the platform dashboard. Ensure `NODE_ENV=production`.
+Deploy as two separate Vercel projects:
+
+1. **Backend API project**
+   - Root Directory: `server`
+   - Uses: `server/vercel.json` + `server/index-vercel.js`
+   - Required environment variables:
+     - `MONGODB_URI`
+     - `JWT_SECRET`
+     - `NODE_ENV=production`
+     - `CORS_ORIGIN=https://<your-frontend-domain>`
+   - Health check: `https://<your-backend-domain>/api/health`
+
+2. **Frontend project**
+   - Root Directory: `client/web`
+   - Build Command: `npm run build`
+   - Output Directory: `build`
+   - Required environment variable:
+     - `REACT_APP_API_URL=https://<your-backend-domain>`
+
+After frontend deploy, update backend `CORS_ORIGIN` to the exact frontend URL and redeploy backend.
+
+### Render / Railway / Heroku (Backend alternative)
+Set all environment variables in the platform dashboard and ensure `NODE_ENV=production`.
 
 ---
 

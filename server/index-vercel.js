@@ -2,46 +2,53 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-// Connect to MongoDB Database (with error handling)
-const connectDB = async () => {
-  try {
-    console.log('Connecting to MongoDB...');
-    const connectDB = require('./config/db-clean');
-    await connectDB();
-    console.log('✅ MongoDB connected successfully');
-  } catch (error) {
-    console.log('⚠️ MongoDB connection failed, enabling fallback mode');
-    global.fallbackMode = true;
+const connectDB = require('./config/db');
+
+['JWT_SECRET', 'MONGODB_URI'].forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`Missing required env var: ${key}`);
   }
-};
+});
 
-// Force fallback mode if MongoDB URI is not available
-if (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes('your-mongodb-uri')) {
-  console.log('⚠️ MongoDB URI not configured, enabling fallback mode');
-  global.fallbackMode = true;
-}
-
-// Start connection (don't wait for it)
 connectDB();
 
 const app = express();
 
-// CORS configuration for Vercel
-app.use(cors({
-  origin: ['https://cms-eta-beige.vercel.app', 'https://bit-1234.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
-  credentials: true
-}));
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+  : ['http://localhost:3000'];
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please try again later.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { success: false, message: 'Too many login attempts. Please wait before trying again.' },
+});
+
+app.use(globalLimiter);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
+// Real-time events are not available in Vercel serverless functions.
+app.use((req, _res, next) => {
+  req.io = null;
+  next();
+});
+
+app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/notices', require('./routes/notices'));
 app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/timetable', require('./routes/timetable'));
@@ -55,19 +62,27 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/admin', require('./routes/admin'));
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'BIT CMS Server Running on Vercel' });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    message: err.message || 'Server Error',
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'BIT CMS Server Running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    runtime: 'vercel-serverless',
   });
 });
 
-// Export for Vercel (production)
+app.use((_req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err.stack);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production'
+      ? 'Internal Server Error'
+      : err.message || 'Internal Server Error',
+  });
+});
+
 module.exports = app;

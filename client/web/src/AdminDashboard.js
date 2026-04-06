@@ -59,6 +59,17 @@ function AdminDashboard() {
     newPassword: '',
     confirmPassword: ''
   });
+  const defaultSystemSettings = {
+    institutionName: 'Bhagwant Institute of Technology',
+    academicYear: '2024-2025',
+    emailNotifications: true,
+    smsNotifications: true
+  };
+  const [systemSettings, setSystemSettings] = useState(defaultSystemSettings);
+  const [adminProfile, setAdminProfile] = useState({
+    name: 'Admin',
+    email: 'admin@bit.edu'
+  });
   const [feeForm, setFeeForm] = useState({
     studentId: '',
     totalFee: 50000,
@@ -73,7 +84,7 @@ function AdminDashboard() {
     paidAmount: '',
     paymentNote: ''
   });
-  const { apiCall } = useAuth();
+  const { apiCall, user } = useAuth();
 
   // Student form state
   const [studentForm, setStudentForm] = useState({
@@ -118,6 +129,25 @@ function AdminDashboard() {
       await fetchAdminData();
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setAdminProfile({
+      name: user.name || 'Admin',
+      email: user.email || 'admin@bit.edu'
+    });
+  }, [user]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('bit_cms_admin_settings');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setSystemSettings((prev) => ({ ...prev, ...parsed }));
+    } catch (error) {
+      console.error('Failed to load admin settings:', error);
+    }
   }, []);
 
   const fetchAdminData = async () => {
@@ -730,6 +760,11 @@ function AdminDashboard() {
         return;
       }
 
+      if (profileForm.newPassword && !profileForm.currentPassword) {
+        alert('Current password is required to set a new password');
+        return;
+      }
+
       const updateData = {
         name: profileForm.name,
         email: profileForm.email
@@ -747,11 +782,27 @@ function AdminDashboard() {
       });
       const data = await response.json();
       if (data.success) {
+        const updatedName = data?.data?.name || profileForm.name || 'Admin';
+        const updatedEmail = data?.data?.email || profileForm.email;
+        setAdminProfile({ name: updatedName, email: updatedEmail });
+
+        try {
+          const rawUser = localStorage.getItem('bit_cms_user');
+          if (rawUser) {
+            const parsed = JSON.parse(rawUser);
+            parsed.name = updatedName;
+            parsed.email = updatedEmail;
+            localStorage.setItem('bit_cms_user', JSON.stringify(parsed));
+          }
+        } catch (storageError) {
+          console.error('Failed to update local user cache:', storageError);
+        }
+
         alert('Profile updated successfully');
         setShowProfileModal(false);
         setProfileForm({
-          name: '',
-          email: '',
+          name: updatedName,
+          email: updatedEmail,
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
@@ -766,15 +817,30 @@ function AdminDashboard() {
   };
 
   const openProfileModal = () => {
-    // Pre-fill current admin details (mock data for now)
     setProfileForm({
-      name: 'Admin',
-      email: 'Admin.bit',
+      name: adminProfile.name || 'Admin',
+      email: adminProfile.email || 'admin@bit.edu',
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     });
     setShowProfileModal(true);
+  };
+
+  const handleSaveSystemSettings = () => {
+    try {
+      localStorage.setItem('bit_cms_admin_settings', JSON.stringify(systemSettings));
+      alert('Settings saved successfully');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings');
+    }
+  };
+
+  const handleResetSystemSettings = () => {
+    setSystemSettings(defaultSystemSettings);
+    localStorage.removeItem('bit_cms_admin_settings');
+    alert('Settings reset to defaults');
   };
 
   // useEffect for tab-based data fetching - moved after all function definitions
@@ -2062,11 +2128,11 @@ function AdminDashboard() {
                 <h4>Admin Profile</h4>
                 <div className="setting-item">
                   <label>Admin Name</label>
-                  <input type="text" value="Admin" disabled />
+                  <input type="text" value={adminProfile.name || 'Admin'} disabled />
                 </div>
                 <div className="setting-item">
                   <label>Admin Email</label>
-                  <input type="email" value="Admin.bit" disabled />
+                  <input type="email" value={adminProfile.email || 'admin@bit.edu'} disabled />
                 </div>
                 <div className="setting-item">
                   <button 
@@ -2081,32 +2147,48 @@ function AdminDashboard() {
                 <h4>General Settings</h4>
                 <div className="setting-item">
                   <label>Institution Name</label>
-                  <input type="text" defaultValue="Bhagwant Institute of Technology" />
+                  <input
+                    type="text"
+                    value={systemSettings.institutionName}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, institutionName: e.target.value })}
+                  />
                 </div>
                 <div className="setting-item">
                   <label>Academic Year</label>
-                  <input type="text" defaultValue="2024-2025" />
+                  <input
+                    type="text"
+                    value={systemSettings.academicYear}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, academicYear: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="setting-group">
                 <h4>Notification Settings</h4>
                 <div className="setting-item">
                   <label>
-                    <input type="checkbox" defaultChecked />
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.emailNotifications}
+                      onChange={(e) => setSystemSettings({ ...systemSettings, emailNotifications: e.target.checked })}
+                    />
                     Enable Email Notifications
                   </label>
                 </div>
                 <div className="setting-item">
                   <label>
-                    <input type="checkbox" defaultChecked />
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.smsNotifications}
+                      onChange={(e) => setSystemSettings({ ...systemSettings, smsNotifications: e.target.checked })}
+                    />
                     Enable SMS Notifications
                   </label>
                 </div>
               </div>
             </div>
             <div className="settings-actions">
-              <button className="action-button primary">Save Settings</button>
-              <button className="action-button secondary">Reset to Defaults</button>
+              <button className="action-button primary" onClick={handleSaveSystemSettings}>Save Settings</button>
+              <button className="action-button secondary" onClick={handleResetSystemSettings}>Reset to Defaults</button>
             </div>
           </div>
         )}

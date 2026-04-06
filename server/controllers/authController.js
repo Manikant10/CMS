@@ -25,6 +25,7 @@ exports.register = async (req, res) => {
 
     // Create user (inactive until approved by admin)
     const user = await User.create({
+      name,
       email: email.toLowerCase(),
       password,
       role,
@@ -115,7 +116,7 @@ exports.login = async (req, res) => {
         email:     user.email,
         role:      user.role,
         profileId: user.profileId,
-        name:      profile?.name || 'Admin',
+        name:      user.name || profile?.name || 'Admin',
       },
     });
   } catch (error) {

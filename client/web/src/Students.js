@@ -122,11 +122,11 @@ function Students() {
       ) : (
         fees.map(fee => (
           <div key={fee._id} className="fee-summary-card">
-            <h4>Semester {fee.semester} â€” {fee.feeType || 'Tuition'}</h4>
+            <h4>Semester {fee.semester} - {fee.feeType || 'Tuition'}</h4>
             <div className="fee-status-details">
-              <div><span className="label">Total:</span> â‚¹{(fee.totalAmount || 0).toLocaleString()}</div>
-              <div><span className="label">Paid:</span>  â‚¹{(fee.paidAmount  || 0).toLocaleString()}</div>
-              <div><span className="label">Due:</span>   â‚¹{((fee.totalAmount || 0) - (fee.paidAmount || 0)).toLocaleString()}</div>
+              <div><span className="label">Total:</span> INR {(fee.totalAmount || 0).toLocaleString()}</div>
+              <div><span className="label">Paid:</span>  INR {(fee.paidAmount  || 0).toLocaleString()}</div>
+              <div><span className="label">Due:</span>   INR {((fee.totalAmount || 0) - (fee.paidAmount || 0)).toLocaleString()}</div>
             </div>
             <div className="progress-bar">
               <div
@@ -141,7 +141,7 @@ function Students() {
                 {fee.transactions.map((t, i) => (
                   <div key={i} className="payment-item">
                     <span>{new Date(t.date).toLocaleDateString('en-IN')}</span>
-                    <span>â‚¹{(t.amount || 0).toLocaleString()}</span>
+                    <span>INR {(t.amount || 0).toLocaleString()}</span>
                     <span>{t.method}</span>
                     {t.receiptNo && <span>#{t.receiptNo}</span>}
                   </div>
@@ -155,9 +155,9 @@ function Students() {
   );
 
   const tabs = [
-    { id: 'overview',  label: 'Overview',  icon: 'ðŸ“Š' },
-    { id: 'timetable', label: 'Timetable', icon: 'ðŸ“…' },
-    { id: 'fees',      label: 'Fees',      icon: 'ðŸ’°' },
+    { id: 'overview',  label: 'Overview',  icon: 'OV' },
+    { id: 'timetable', label: 'Timetable', icon: 'TT' },
+    { id: 'fees',      label: 'Fees',      icon: 'FE' },
   ];
 
   return (
@@ -187,4 +187,3 @@ function Students() {
 }
 
 export default Students;
-

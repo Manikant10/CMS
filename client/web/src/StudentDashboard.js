@@ -131,14 +131,14 @@ function StudentDashboard() {
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
           >
-            <span className="nav-icon">📊</span>
+            <span className="nav-icon">OV</span>
             <span>Overview</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'timetable' ? 'active' : ''}`}
             onClick={() => setActiveTab('timetable')}
           >
-            <span className="nav-icon">📅</span>
+            <span className="nav-icon">TT</span>
             <span>Timetable</span>
           </button>
         </div>

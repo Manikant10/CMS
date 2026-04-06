@@ -118,9 +118,9 @@ function FacultyDashboard() {
               <div className="course-code">{course.code}</div>
               <div className="course-name">{course.name}</div>
               <div className="course-meta">
-                Sem {course.semester} Â· {course.credits} credits Â· {course.type}
+                Sem {course.semester} - {course.credits} credits - {course.type}
               </div>
-              {course.room && <div className="course-room">ðŸ“ {course.room}</div>}
+              {course.room && <div className="course-room">Room: {course.room}</div>}
             </div>
           ))
         )}
@@ -144,10 +144,10 @@ function FacultyDashboard() {
                 {dayEntries.flatMap(entry =>
                   entry.periods.map((p, idx) => (
                     <div key={idx} className={`period-item ${p.type?.toLowerCase() || 'lecture'}`}>
-                      <span className="time">{p.startTime}â€“{p.endTime}</span>
-                      <span className="course">{p.course?.name || 'â€”'}</span>
+                      <span className="time">{p.startTime} - {p.endTime}</span>
+                      <span className="course">{p.course?.name || '-'}</span>
                       <span className="room">{p.room || 'N/A'}</span>
-                      <span className="sem-section">Sem {entry.semester} Â· {entry.section}</span>
+                      <span className="sem-section">Sem {entry.semester} - {entry.section}</span>
                     </div>
                   ))
                 )}
@@ -177,16 +177,15 @@ function FacultyDashboard() {
             setSelectedCourse(c);
           }}
         >
-          <option value="">â€” Select Course â€”</option>
+          <option value="">Select Course</option>
           {courses.map(c => (
-            <option key={c._id} value={c._id}>{c.code} â€” {c.name}</option>
+            <option key={c._id} value={c._id}>{c.code} - {c.name}</option>
           ))}
         </select>
       </div>
 
       {attendanceError && <p className="error-msg">{attendanceError}</p>}
-      {attendanceSaved && <p className="success-msg">âœ… Attendance saved successfully!</p>}
-
+      {attendanceSaved && <p className="success-msg">Attendance saved successfully!</p>}
       {selectedCourse && students.length > 0 && (
         <>
           <div className="attendance-table">
@@ -238,9 +237,9 @@ function FacultyDashboard() {
   );
 
   const tabs = [
-    { id: 'overview',    label: 'Overview',    icon: 'ðŸ“Š' },
-    { id: 'timetable',   label: 'Timetable',   icon: 'ðŸ“…' },
-    { id: 'attendance',  label: 'Attendance',  icon: 'âœ…' },
+    { id: 'overview',    label: 'Overview',    icon: 'OV' },
+    { id: 'timetable',   label: 'Timetable',   icon: 'TT' },
+    { id: 'attendance',  label: 'Attendance',  icon: 'AT' },
   ];
 
   return (

@@ -494,6 +494,33 @@ function AdminDashboard() {
     setShowDeleteConfirm(true);
   };
 
+  const parseResponseSafe = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return {};
+    }
+  };
+
+  const deactivateWithFallback = async ({ deactivatePath, deletePath, entityLabel }) => {
+    let response = await apiCall(deactivatePath, { method: 'POST' });
+    let data = await parseResponseSafe(response);
+
+    if (response.ok && data.success) return { success: true, data };
+
+    // Backward compatibility: older deployments may only expose DELETE routes.
+    if (response.status === 404 || response.status === 405) {
+      response = await apiCall(deletePath, { method: 'DELETE' });
+      data = await parseResponseSafe(response);
+      if (response.ok && data.success) return { success: true, data };
+    }
+
+    return {
+      success: false,
+      message: data.message || `Failed to delete ${entityLabel} (HTTP ${response.status})`
+    };
+  };
+
   const confirmDelete = async () => {
     try {
       if (!deleteTarget.id || !deleteTarget.type) {
@@ -502,37 +529,37 @@ function AdminDashboard() {
       }
 
       if (deleteTarget.type === 'student') {
-        const response = await apiCall(`/api/students/${deleteTarget.id}/deactivate`, {
-          method: 'POST'
+        const result = await deactivateWithFallback({
+          deactivatePath: `/api/students/${deleteTarget.id}/deactivate`,
+          deletePath: `/api/students/${deleteTarget.id}`,
+          entityLabel: 'student'
         });
-        const data = await response.json().catch(() => ({}));
-        if (response.ok && data.success) {
-          fetchStudents();
-          fetchAdminData();
+        if (result.success) {
+          await Promise.all([fetchStudents(), fetchAdminData()]);
         } else {
-          alert(data.message || `Failed to delete student (HTTP ${response.status})`);
+          alert(result.message);
         }
       } else if (deleteTarget.type === 'faculty') {
-        const response = await apiCall(`/api/faculty/${deleteTarget.id}/deactivate`, {
-          method: 'POST'
+        const result = await deactivateWithFallback({
+          deactivatePath: `/api/faculty/${deleteTarget.id}/deactivate`,
+          deletePath: `/api/faculty/${deleteTarget.id}`,
+          entityLabel: 'faculty'
         });
-        const data = await response.json().catch(() => ({}));
-        if (response.ok && data.success) {
-          fetchFaculty();
-          fetchAdminData();
+        if (result.success) {
+          await Promise.all([fetchFaculty(), fetchAdminData()]);
         } else {
-          alert(data.message || `Failed to delete faculty (HTTP ${response.status})`);
+          alert(result.message);
         }
       } else if (deleteTarget.type === 'course') {
-        const response = await apiCall(`/api/courses/${deleteTarget.id}`, {
-          method: 'DELETE'
+        const result = await deactivateWithFallback({
+          deactivatePath: `/api/courses/${deleteTarget.id}/deactivate`,
+          deletePath: `/api/courses/${deleteTarget.id}`,
+          entityLabel: 'course'
         });
-        const data = await response.json().catch(() => ({}));
-        if (response.ok && data.success) {
-          fetchCourses();
-          fetchAdminData();
+        if (result.success) {
+          await Promise.all([fetchCourses(), fetchAdminData()]);
         } else {
-          alert(data.message || `Failed to delete course (HTTP ${response.status})`);
+          alert(result.message);
         }
       }
     } catch (error) {

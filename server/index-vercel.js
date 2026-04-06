@@ -24,6 +24,22 @@ app.set('trust proxy', 1);
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
   : ['http://localhost:3000'];
+const vercelCmsPreviewPattern = /^https:\/\/cms-[a-z0-9-]+-manikant10s-projects\.vercel\.app$/i;
+const vercelCmsAliasPattern = /^https:\/\/cms-[a-z0-9-]+\.vercel\.app$/i;
+
+const isAllowedOrigin = (origin) => allowedOrigins.includes(origin)
+  || vercelCmsPreviewPattern.test(origin)
+  || vercelCmsAliasPattern.test(origin);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    return callback(null, isAllowedOrigin(origin));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -40,7 +56,8 @@ const authLimiter = rateLimit({
 });
 
 app.use(globalLimiter);
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));

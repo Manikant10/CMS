@@ -63,10 +63,24 @@ export const AuthProvider = ({ children }) => {
   const apiCall = useCallback(async (urlOrPath, options = {}) => {
     const token = localStorage.getItem('bit_cms_token');
 
-    // Resolve relative paths against the configured base URL
-    const url = urlOrPath.startsWith('http')
-      ? urlOrPath
-      : `${apiConfig.baseURL}${urlOrPath}`;
+    const normalizeAbsoluteUrl = (rawUrl) => {
+      try {
+        const parsed = new URL(rawUrl);
+        parsed.pathname = parsed.pathname.replace(/\/{2,}/g, '/');
+        return parsed.toString();
+      } catch {
+        return rawUrl;
+      }
+    };
+
+    const resolveUrl = (value) => {
+      if (/^https?:\/\//i.test(value)) return normalizeAbsoluteUrl(value);
+      const base = (apiConfig.baseURL || '').replace(/\/+$/, '');
+      const path = String(value || '').replace(/^\/+/, '');
+      return `${base}/${path}`;
+    };
+
+    const url = resolveUrl(urlOrPath);
 
     const headers = {
       'Content-Type': 'application/json',

@@ -1,7 +1,12 @@
 // API Configuration
 // Set REACT_APP_API_URL in your .env file for the deployed backend URL.
 // Falls back to localhost for local development.
-const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const normalizeBaseUrl = (value = '') => value
+  .trim()
+  .replace(/^['"]|['"]$/g, '')
+  .replace(/\/+$/, '');
+
+const API_BASE_URL = normalizeBaseUrl(process.env.REACT_APP_API_URL || '') || 'http://localhost:5000';
 
 const apiConfig = {
   baseURL: API_BASE_URL,

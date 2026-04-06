@@ -140,14 +140,22 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 });
 
 // DELETE /api/courses/:id — soft delete
-router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+const deactivateCourse = async (courseId, res) => {
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const course = await Course.findByIdAndUpdate(courseId, { isActive: false }, { new: true });
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     res.json({ success: true, message: 'Course deactivated successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+  await deactivateCourse(req.params.id, res);
+});
+
+router.post('/:id/deactivate', protect, authorize('admin'), async (req, res) => {
+  await deactivateCourse(req.params.id, res);
 });
 
 module.exports = router;

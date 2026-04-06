@@ -84,6 +84,14 @@ function AdminDashboard() {
     paidAmount: '',
     paymentNote: ''
   });
+  const studentDepartments = [
+    'Computer Science and Engineering',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Electrical Engineering',
+    'Electronics and Communication Engineering',
+    'Information Technology'
+  ];
   const { apiCall, user } = useAuth();
 
   // Student form state
@@ -921,7 +929,7 @@ function AdminDashboard() {
               <th>Name</th>
               <th>Email</th>
               <th>Semester</th>
-              <th>Section</th>
+              <th>Department</th>
               <th>Phone</th>
               <th>Status</th>
               <th>Actions</th>
@@ -1044,16 +1052,19 @@ function AdminDashboard() {
                   </select>
                 </div>
                 <div className="input-group">
-                  <label>Section *</label>
+                  <label>Department *</label>
                   <select
                     name="section"
                     value={studentForm.section}
                     onChange={(e) => setStudentForm({...studentForm, section: e.target.value})}
                     required
                   >
-                    <option value="">Select Section</option>
-                    {['A','B','C','D'].map(sec => (
-                      <option key={sec} value={sec}>Section {sec}</option>
+                    <option value="">Select Department</option>
+                    {studentForm.section && !studentDepartments.includes(studentForm.section) && (
+                      <option value={studentForm.section}>{studentForm.section}</option>
+                    )}
+                    {studentDepartments.map((department) => (
+                      <option key={department} value={department}>{department}</option>
                     ))}
                   </select>
                 </div>

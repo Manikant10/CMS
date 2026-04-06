@@ -16,7 +16,9 @@ require('dotenv').config();
 });
 
 const connectDB = require('./config/db');
-connectDB();
+connectDB().catch((error) => {
+  console.error('Initial MongoDB connection failed:', error.message);
+});
 
 const app    = express();
 const server = http.createServer(app);

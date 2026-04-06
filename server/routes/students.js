@@ -88,15 +88,23 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       email: email?.toLowerCase(),
       isActive: true,
     });
+    try {
+      // Create user account (active immediately when admin creates it)
+      const user = await User.create({
+        email:     email?.toLowerCase(),
+        password,
+        role:      'student',
+        profileId: student._id,
+        isActive:  true,
+      });
 
-    // Create user account (active immediately when admin creates it)
-    await User.create({
-      email:     email?.toLowerCase(),
-      password,
-      role:      'student',
-      profileId: student._id,
-      isActive:  true,
-    });
+      // Keep backward-compatible linkage for delete/update flows.
+      student.userId = user._id;
+      await student.save();
+    } catch (error) {
+      await Student.findByIdAndDelete(student._id);
+      throw error;
+    }
 
     res.status(201).json({ success: true, data: student });
   } catch (error) {
@@ -133,8 +141,15 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     );
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
-    // Also deactivate the linked user account
-    await User.findOneAndUpdate({ profileId: req.params.id }, { isActive: false });
+    const userFilters = [{ profileId: student._id }];
+    if (student.userId) userFilters.push({ _id: student.userId });
+    if (student.email) userFilters.push({ email: student.email.toLowerCase() });
+
+    // Deactivate any linked user account for this student record.
+    await User.updateMany(
+      { role: 'student', $or: userFilters },
+      { $set: { isActive: false } }
+    );
 
     res.json({ success: true, message: 'Student deactivated successfully' });
   } catch (error) {

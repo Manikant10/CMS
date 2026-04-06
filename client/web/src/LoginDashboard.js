@@ -4,19 +4,31 @@ import { useAuth } from './context/AuthContext';
 import apiConfig from './config/api';
 import './LoginDashboard.css';
 
+const STUDENT_DEPARTMENTS = [
+  'Computer Science and Engineering',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Electrical Engineering',
+  'Electronics and Communication Engineering',
+  'Information Technology'
+];
+
+const EMPTY_FORM = {
+  email: '',
+  password: '',
+  name: '',
+  rollNo: '',
+  empId: '',
+  semester: '',
+  section: '',
+  batch: '',
+  phone: '',
+  role: ''
+};
+
 function LoginDashboard() {
   const [loginType, setLoginType] = useState('');
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    name: '',
-    rollNo: '',
-    empId: '',
-    semester: '',
-    batch: '',
-    phone: '',
-    role: ''
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,12 +37,17 @@ function LoginDashboard() {
 
   const handleLoginTypeSelect = (type) => {
     setLoginType(type);
-    setFormData({ ...formData, role: type });
+    setFormData({ ...EMPTY_FORM, role: type });
+    setIsRegistering(false);
     setError('');
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const resetRoleForm = (role) => {
+    setFormData({ ...EMPTY_FORM, role });
   };
 
   const handleSubmit = async (e) => {
@@ -40,57 +57,47 @@ function LoginDashboard() {
 
     try {
       if (isRegistering) {
-        // Prevent admin registration
-        if (loginType === 'admin') {
-          setError('Admin registration is not allowed');
+        // Current requirement: only student self-registration.
+        if (loginType !== 'student') {
+          setError('Only student self-registration is enabled. Please contact admin.');
           setLoading(false);
           return;
         }
-        
-        // Registration
+
+        const registerPayload = {
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          role: 'student',
+          name: formData.name.trim(),
+          rollNo: formData.rollNo.trim(),
+          semester: Number(formData.semester),
+          section: formData.section || 'A',
+          batch: formData.batch.trim(),
+          phone: formData.phone.trim()
+        };
+
         const response = await fetch(apiConfig.endpoints.register, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(registerPayload)
         });
+
         const result = await response.json();
-        
-        if (result.success) {
-          setError('');
-          if (result.requiresApproval) {
-            // Show approval message and reset form
-            alert(result.message || 'Registration submitted successfully. Please wait for admin approval.');
-            setIsRegistering(false);
-            setFormData({
-              username: '',
-              password: '',
-              name: '',
-              rollNo: '',
-              empId: '',
-              semester: '',
-              batch: '',
-              phone: '',
-              role: loginType
-            });
-          } else {
-            // Normal login after registration (for admin if allowed)
-            const loginResult = await login(formData.username, formData.password, navigate);
-            if (!loginResult.success) {
-              setError(loginResult.message || 'Registration successful but login failed');
-            }
-          }
+
+        if (response.ok && result.success) {
+          alert(result.message || 'Registration submitted successfully. Please wait for admin approval.');
+          setIsRegistering(false);
+          resetRoleForm(loginType);
         } else {
           setError(result.message || 'Registration failed');
         }
       } else {
-        // Login
-        const result = await login(formData.username, formData.password, navigate);
+        const result = await login(formData.email, formData.password, navigate);
         if (!result.success) {
           setError(result.message || 'Authentication failed');
         }
-        // Navigation is handled by the AuthContext
       }
-    } catch (error) {
+    } catch {
       setError('Server error. Please try again.');
     } finally {
       setLoading(false);
@@ -102,19 +109,19 @@ function LoginDashboard() {
       admin: {
         title: 'ADMIN PORTAL',
         subtitle: 'System Administration',
-        icon: '🔐',
+        icon: 'ADM',
         color: '#ff4444'
       },
       student: {
         title: 'STUDENT PORTAL',
         subtitle: 'Academic Portal',
-        icon: '🎓',
+        icon: 'STD',
         color: '#00aaff'
       },
       faculty: {
         title: 'FACULTY PORTAL',
         subtitle: 'Faculty Dashboard',
-        icon: '👨‍🏫',
+        icon: 'FAC',
         color: '#44ff44'
       }
     };
@@ -133,18 +140,18 @@ function LoginDashboard() {
           {!isRegistering ? (
             <>
               <div className="input-group">
-                <label>Username</label>
+                <label>Email</label>
                 <input
-                  type="text"
-                  name="username"
-                  placeholder={`Enter your ${loginType} username`}
-                  value={formData.username}
+                  type="email"
+                  name="email"
+                  placeholder={`Enter your ${loginType} email`}
+                  value={formData.email}
                   onChange={handleInputChange}
                   required
                   style={{ borderColor: config.color }}
                 />
               </div>
-              
+
               <div className="input-group">
                 <label>Password</label>
                 <input
@@ -174,12 +181,12 @@ function LoginDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Username</label>
+                <label>Email</label>
                 <input
-                  type="text"
-                  name="username"
-                  placeholder={`Enter your ${loginType} username`}
-                  value={formData.username}
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   required
                   style={{ borderColor: config.color }}
@@ -191,76 +198,74 @@ function LoginDashboard() {
                 <input
                   type="password"
                   name="password"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 8 characters)"
                   value={formData.password}
+                  onChange={handleInputChange}
+                  minLength="8"
+                  required
+                  style={{ borderColor: config.color }}
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Roll Number</label>
+                <input
+                  type="text"
+                  name="rollNo"
+                  placeholder="Enter roll number"
+                  value={formData.rollNo}
                   onChange={handleInputChange}
                   required
                   style={{ borderColor: config.color }}
                 />
               </div>
 
-              {loginType === 'student' && (
-                <>
-                  <div className="input-group">
-                    <label>Roll Number</label>
-                    <input
-                      type="text"
-                      name="rollNo"
-                      placeholder="Enter roll number"
-                      value={formData.rollNo}
-                      onChange={handleInputChange}
-                      required
-                      style={{ borderColor: config.color }}
-                    />
-                  </div>
-
-                  <div className="input-row">
-                    <div className="input-group">
-                      <label>Semester</label>
-                      <select
-                        name="semester"
-                        value={formData.semester}
-                        onChange={handleInputChange}
-                        required
-                        style={{ borderColor: config.color }}
-                      >
-                        <option value="">Select</option>
-                        {[1,2,3,4,5,6,7,8].map(sem => (
-                          <option key={sem} value={sem}>Sem {sem}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="input-group">
-                      <label>Batch</label>
-                      <input
-                        type="text"
-                        name="batch"
-                        placeholder="e.g., 2024-28"
-                        value={formData.batch}
-                        onChange={handleInputChange}
-                        required
-                        style={{ borderColor: config.color }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {loginType === 'faculty' && (
+              <div className="input-row">
                 <div className="input-group">
-                  <label>Employee ID</label>
+                  <label>Semester</label>
+                  <select
+                    name="semester"
+                    value={formData.semester}
+                    onChange={handleInputChange}
+                    required
+                    style={{ borderColor: config.color }}
+                  >
+                    <option value="">Select</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>Sem {sem}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="input-group">
+                  <label>Batch</label>
                   <input
                     type="text"
-                    name="empId"
-                    placeholder="Enter employee ID"
-                    value={formData.empId}
+                    name="batch"
+                    placeholder="e.g., 2024-28"
+                    value={formData.batch}
                     onChange={handleInputChange}
                     required
                     style={{ borderColor: config.color }}
                   />
                 </div>
-              )}
+              </div>
+
+              <div className="input-group">
+                <label>Department</label>
+                <select
+                  name="section"
+                  value={formData.section}
+                  onChange={handleInputChange}
+                  required
+                  style={{ borderColor: config.color }}
+                >
+                  <option value="">Select Department</option>
+                  {STUDENT_DEPARTMENTS.map((department) => (
+                    <option key={department} value={department}>{department}</option>
+                  ))}
+                </select>
+              </div>
 
               <div className="input-group">
                 <label>Phone Number</label>
@@ -284,31 +289,35 @@ function LoginDashboard() {
             disabled={loading}
             style={{ backgroundColor: config.color }}
           >
-            {loading ? 'Processing...' : (isRegistering ? 'Register' : 'Login')}
+            {loading ? 'Processing...' : (isRegistering ? 'Create Account' : 'Login')}
           </button>
 
-          {loginType !== 'admin' && (
-          <div className="form-toggle">
-            <button
-              type="button"
-              onClick={() => setIsRegistering(!isRegistering)}
-              className="toggle-button"
-              style={{ color: config.color }}
-            >
-              {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
-            </button>
-          </div>
-        )}
+          {loginType === 'student' && (
+            <div className="form-toggle">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(!isRegistering);
+                  setError('');
+                }}
+                className="toggle-button"
+                style={{ color: config.color }}
+              >
+                {isRegistering
+                  ? 'Already have an account? Login'
+                  : 'New student? Create account (requires admin approval)'}
+              </button>
+            </div>
+          )}
         </form>
-
-              </div>
+      </div>
     );
   };
 
   return (
     <div className="login-dashboard">
       <div className="background-animation"></div>
-      
+
       <div className="login-container">
         <header className="login-header-main">
           <h1 className="institution-title">
@@ -323,16 +332,17 @@ function LoginDashboard() {
           <div className="role-selection">
             <h2>Select Your Role</h2>
             <div className="role-cards">
-              <div className="role-card admin"
+              <div
+                className="role-card admin"
                 onClick={() => handleLoginTypeSelect('admin')}
               >
-                <div className="role-icon">🔐</div>
+                <div className="role-icon">ADM</div>
                 <h3>Administrator</h3>
-                <p>System Management & Administration</p>
+                <p>System Management and Administration</p>
                 <div className="role-features">
                   <span>User Management</span>
                   <span>System Settings</span>
-                  <span>Reports & Analytics</span>
+                  <span>Reports and Analytics</span>
                 </div>
               </div>
 
@@ -340,9 +350,9 @@ function LoginDashboard() {
                 className="role-card student"
                 onClick={() => handleLoginTypeSelect('student')}
               >
-                <div className="role-icon">🎓</div>
+                <div className="role-icon">STD</div>
                 <h3>Student</h3>
-                <p>Academic Portal & Services</p>
+                <p>Academic Portal and Services</p>
                 <div className="role-features">
                   <span>View Attendance</span>
                   <span>Access Resources</span>
@@ -353,9 +363,9 @@ function LoginDashboard() {
                 className="role-card faculty"
                 onClick={() => handleLoginTypeSelect('faculty')}
               >
-                <div className="role-icon">👨‍🏫</div>
+                <div className="role-icon">FAC</div>
                 <h3>Faculty</h3>
-                <p>Teaching & Faculty Services</p>
+                <p>Teaching and Faculty Services</p>
                 <div className="role-features">
                   <span>Manage Classes</span>
                   <span>Track Attendance</span>
@@ -366,15 +376,15 @@ function LoginDashboard() {
 
             <div className="quick-info">
               <div className="info-card">
-                <h4>📚 Academic Excellence</h4>
+                <h4>Academic Excellence</h4>
                 <p>Comprehensive management for academic institutions</p>
               </div>
               <div className="info-card">
-                <h4>🔒 Secure & Reliable</h4>
+                <h4>Secure and Reliable</h4>
                 <p>Enterprise-grade security for all your data</p>
               </div>
               <div className="info-card">
-                <h4>📱 Anytime, Anywhere</h4>
+                <h4>Anytime, Anywhere</h4>
                 <p>Access your portal from any device, anywhere</p>
               </div>
             </div>
@@ -382,10 +392,15 @@ function LoginDashboard() {
         ) : (
           <div className="login-form-wrapper">
             <button
-              onClick={() => setLoginType('')}
+              onClick={() => {
+                setLoginType('');
+                setIsRegistering(false);
+                setError('');
+                setFormData(EMPTY_FORM);
+              }}
               className="back-button"
             >
-              ← Back to Role Selection
+              {'< Back to Role Selection'}
             </button>
             {renderLoginForm()}
           </div>
@@ -397,7 +412,7 @@ function LoginDashboard() {
         <div className="footer-links">
           <span>Privacy Policy</span>
           <span>Terms of Service</span>
-          <span>Help & Support</span>
+          <span>Help and Support</span>
         </div>
       </footer>
     </div>

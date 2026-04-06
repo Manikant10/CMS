@@ -5,15 +5,17 @@ const Faculty   = require('../models/Faculty');
 const Course    = require('../models/Course');
 const Fee       = require('../models/Fee');
 const Notice    = require('../models/Notice');
+const User      = require('../models/User');
 const { protect } = require('../middleware/auth');
 
 // GET /api/dashboard/stats  — Admin only (aggregated numbers)
 router.get('/stats', protect, async (req, res) => {
   try {
-    const [totalStudents, totalFaculty, totalCourses, feeAgg] = await Promise.all([
+    const [totalStudents, totalFaculty, totalCourses, pendingRegistrations, feeAgg] = await Promise.all([
       Student.countDocuments({ isActive: true }),
       Faculty.countDocuments({ isActive: true }),
       Course.countDocuments({ isActive: true }),
+      User.countDocuments({ isActive: false, role: { $in: ['student', 'faculty'] } }),
       Fee.aggregate([
         { $group: {
             _id: null,
@@ -29,6 +31,7 @@ router.get('/stats', protect, async (req, res) => {
         totalStudents,
         totalFaculty,
         totalCourses,
+        pendingRegistrations,
         totalFeeCollected: feeAgg[0]?.totalFeeCollected || 0,
         totalFeeDue:       feeAgg[0]?.totalFeeDue       || 0,
       },

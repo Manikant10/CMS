@@ -455,43 +455,48 @@ function AdminDashboard() {
 
   const confirmDelete = async () => {
     try {
+      if (!deleteTarget.id || !deleteTarget.type) {
+        alert('Invalid delete request. Please try again.');
+        return;
+      }
+
       if (deleteTarget.type === 'student') {
         const response = await apiCall(`/api/students/${deleteTarget.id}`, {
           method: 'DELETE'
         });
-        const data = await response.json();
-        if (data.success) {
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) {
           fetchStudents();
           fetchAdminData();
         } else {
-          alert(data.message || 'Failed to delete student');
+          alert(data.message || `Failed to delete student (HTTP ${response.status})`);
         }
       } else if (deleteTarget.type === 'faculty') {
         const response = await apiCall(`/api/faculty/${deleteTarget.id}`, {
           method: 'DELETE'
         });
-        const data = await response.json();
-        if (data.success) {
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) {
           fetchFaculty();
           fetchAdminData();
         } else {
-          alert(data.message || 'Failed to delete faculty');
+          alert(data.message || `Failed to delete faculty (HTTP ${response.status})`);
         }
       } else if (deleteTarget.type === 'course') {
         const response = await apiCall(`/api/courses/${deleteTarget.id}`, {
           method: 'DELETE'
         });
-        const data = await response.json();
-        if (data.success) {
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) {
           fetchCourses();
           fetchAdminData();
         } else {
-          alert(data.message || 'Failed to delete course');
+          alert(data.message || `Failed to delete course (HTTP ${response.status})`);
         }
       }
     } catch (error) {
       console.error('Error deleting:', error);
-      alert('Failed to delete');
+      alert(error.message || 'Failed to delete');
     } finally {
       setShowDeleteConfirm(false);
       setDeleteTarget({ type: '', id: '', name: '' });
@@ -901,13 +906,15 @@ function AdminDashboard() {
       fetchFaculty();
     } else if (activeTab === 'courses') {
       fetchCourses();
+    } else if (activeTab === 'approvals') {
+      fetchPendingRegistrations();
     } else if (activeTab === 'timetable') {
       fetchTimetables();
       fetchCoursesAndFaculty();
     } else if (activeTab === 'fees') {
       fetchFees();
     }
-  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchStudents, fetchTimetables]);
+  }, [activeTab, apiCall, fetchCourses, fetchCoursesAndFaculty, fetchFaculty, fetchFees, fetchPendingRegistrations, fetchStudents, fetchTimetables]);
 
   const renderStudents = () => (
     <div className="tab-content">

@@ -77,14 +77,22 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       email: email?.toLowerCase(),
       isActive: true,
     });
+    try {
+      const user = await User.create({
+        email:     email?.toLowerCase(),
+        password,
+        role:      'faculty',
+        profileId: faculty._id,
+        isActive:  true,
+      });
 
-    await User.create({
-      email:     email?.toLowerCase(),
-      password,
-      role:      'faculty',
-      profileId: faculty._id,
-      isActive:  true,
-    });
+      // Keep backward-compatible linkage for delete/update flows.
+      faculty.userId = user._id;
+      await faculty.save();
+    } catch (error) {
+      await Faculty.findByIdAndDelete(faculty._id);
+      throw error;
+    }
 
     res.status(201).json({ success: true, data: faculty });
   } catch (error) {
@@ -115,7 +123,14 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     const faculty = await Faculty.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
     if (!faculty) return res.status(404).json({ success: false, message: 'Faculty not found' });
 
-    await User.findOneAndUpdate({ profileId: req.params.id }, { isActive: false });
+    const userFilters = [{ profileId: faculty._id }];
+    if (faculty.userId) userFilters.push({ _id: faculty.userId });
+    if (faculty.email) userFilters.push({ email: faculty.email.toLowerCase() });
+
+    await User.updateMany(
+      { role: 'faculty', $or: userFilters },
+      { $set: { isActive: false } }
+    );
 
     res.json({ success: true, message: 'Faculty deactivated successfully' });
   } catch (error) {

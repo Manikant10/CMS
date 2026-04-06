@@ -438,6 +438,66 @@ body {
   color: #007bff;
 }
 
+.courses-page {
+  width: 95%;
+  max-width: 1300px;
+}
+
+.courses-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.courses-live-meta {
+  margin: 0 0 1.25rem 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.semester-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.semester-filter-btn {
+  border: 1px solid #ced4da;
+  background: #ffffff;
+  color: #495057;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.semester-filter-btn:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.semester-filter-btn.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #ffffff;
+}
+
+.course-count-chip {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
 .notices-container {
   width: 80%;
   max-width: 900px;
@@ -469,4 +529,15 @@ body {
 .notice-item span {
   font-size: 0.8rem;
   color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .courses-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .courses-page-header .futuristic-title {
+    margin-bottom: 0.75rem !important;
+  }
 }

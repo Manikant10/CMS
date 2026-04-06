@@ -16,6 +16,8 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
+// Vercel runs behind a proxy and forwards client IP via X-Forwarded-For.
+app.set('trust proxy', 1);
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())

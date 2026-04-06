@@ -20,6 +20,8 @@ connectDB();
 
 const app    = express();
 const server = http.createServer(app);
+// Required behind reverse proxies (Vercel/Nginx) for correct rate-limit client IP detection.
+app.set('trust proxy', 1);
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())

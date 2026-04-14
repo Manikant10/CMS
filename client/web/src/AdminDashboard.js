@@ -12,11 +12,13 @@ function AdminDashboard() {
     totalFaculty: 0,
     totalCourses: 0,
     totalNotices: 0,
-    totalBooks: 0,
-    pendingBookIssues: 0,
     pendingRegistrations: 0,
-    recentPayments: []
+    totalFeeCollected: 0,
+    totalFeeDue: 0,
+    studentsBySemester: [],
+    recentPayments: [],
   });
+  const [lastStatsSync, setLastStatsSync] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [students, setStudents] = useState([]);
@@ -155,6 +157,14 @@ function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAdminData();
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     setAdminProfile({
       name: user.name || 'Admin',
@@ -175,10 +185,24 @@ function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      const response = await apiCall('/api/dashboard/stats');
-      const data = await response.json();
-      if (data.success) {
-        setStats(data.data);
+      const [statsResponse, overviewResponse] = await Promise.all([
+        apiCall('/api/dashboard/stats'),
+        apiCall('/api/dashboard/overview'),
+      ]);
+      const statsData = await statsResponse.json().catch(() => ({}));
+      const overviewData = await overviewResponse.json().catch(() => ({}));
+
+      if (statsData.success || overviewData.success) {
+        const statsPayload = statsData.success ? (statsData.data || {}) : {};
+        const overviewPayload = overviewData.success ? (overviewData.data || {}) : {};
+        setStats((prev) => ({
+          ...prev,
+          ...statsPayload,
+          ...overviewPayload,
+          studentsBySemester: overviewPayload.studentsBySemester || prev.studentsBySemester || [],
+          recentPayments: overviewPayload.recentPayments || prev.recentPayments || [],
+        }));
+        setLastStatsSync(new Date());
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -1761,127 +1785,6 @@ function AdminDashboard() {
     </div>
   );
 
-  {/* Delete Confirmation Modal */}
-  {showDeleteConfirm && (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Confirm Deletion</h3>
-        <p>Are you sure you want to delete {deleteTarget.name}? This action cannot be undone.</p>
-        <div className="modal-actions">
-          <button 
-            className="action-button primary"
-            onClick={confirmDelete}
-          >
-            Delete
-          </button>
-          <button 
-            className="action-button secondary"
-            onClick={cancelDelete}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-
-  {/* Reject Confirmation Modal */}
-  {showRejectConfirm && (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Confirm Rejection</h3>
-        <p>Are you sure you want to reject {rejectTarget.name}'s registration? This action cannot be undone.</p>
-        <div className="modal-actions">
-          <button 
-            className="action-button primary"
-            onClick={confirmRejectRegistration}
-          >
-            Reject
-          </button>
-          <button 
-            className="action-button secondary"
-            onClick={cancelRejectRegistration}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-
-  {/* Admin Profile Modal */}
-  {showProfileModal && (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Reset Admin Details</h3>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleProfileUpdate();
-        }}>
-          <div className="input-group">
-            <label>Admin Name</label>
-            <input
-              type="text"
-              name="name"
-              value={profileForm.name}
-              onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label>Admin Email</label>
-            <input
-              type="email"
-              name="email"
-              value={profileForm.email}
-              onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label>Current Password (leave blank if not changing)</label>
-            <input
-              type="password"
-              name="currentPassword"
-              value={profileForm.currentPassword}
-              onChange={(e) => setProfileForm({...profileForm, currentPassword: e.target.value})}
-            />
-          </div>
-          <div className="input-group">
-            <label>New Password (leave blank if not changing)</label>
-            <input
-              type="password"
-              name="newPassword"
-              value={profileForm.newPassword}
-              onChange={(e) => setProfileForm({...profileForm, newPassword: e.target.value})}
-            />
-          </div>
-          <div className="input-group">
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={profileForm.confirmPassword}
-              onChange={(e) => setProfileForm({...profileForm, confirmPassword: e.target.value})}
-            />
-          </div>
-          <div className="modal-actions">
-            <button type="submit" className="action-button primary">
-              Update Profile
-            </button>
-            <button 
-              type="button" 
-              className="action-button secondary"
-              onClick={() => setShowProfileModal(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )}
-
   const renderApprovals = () => (
     <div className="tab-content">
       <div className="section-header">
@@ -2548,52 +2451,109 @@ function AdminDashboard() {
     </div>
   );
 
-  const renderOverview = () => (
-    <div className="admin-overview">
-      <div className="welcome-section">
-        <h3>Welcome, Administrator</h3>
-        <p>Manage your institution with comprehensive tools and real-time insights</p>
-      </div>
-      
-      <div className="stats-grid">
-        <div className="stat-card primary">
-          <div className="stat-value">{stats.totalStudents}</div>
-          <div className="stat-label">Total Students</div>
-          <div className="stat-change">+12% this semester</div>
-        </div>
-        <div className="stat-card secondary">
-          <div className="stat-value">{stats.totalFaculty}</div>
-          <div className="stat-label">Total Faculty</div>
-          <div className="stat-change">+2 new hires</div>
-        </div>
-        <div className="stat-card warning">
-          <div className="stat-value">{stats.totalCourses}</div>
-          <div className="stat-label">Total Courses</div>
-          <div className="stat-change">All operational</div>
-        </div>
-      </div>
+  const renderOverview = () => {
+    const semCounts = Array.isArray(stats.studentsBySemester) ? stats.studentsBySemester : [];
+    const maxSemCount = Math.max(...semCounts.map((row) => Number(row.count) || 0), 1);
+    const recentPayments = Array.isArray(stats.recentPayments) ? stats.recentPayments : [];
 
-      <div className="dashboard-main">
-        <div className="dashboard-section">
-          <h3>System Status</h3>
-          <div className="status-grid">
-            <div className="status-item">
-              <span className="status-label">Database</span>
-              <span className="status-value online">Online</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">API Server</span>
-              <span className="status-value online">Operational</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Last Backup</span>
-              <span className="status-value">2 hours ago</span>
+    return (
+      <div className="admin-overview">
+        <div className="welcome-section">
+          <h3>Welcome, Administrator</h3>
+          <p>
+            Live dashboard refreshes every 15 seconds
+            {lastStatsSync ? ` | Last sync: ${lastStatsSync.toLocaleTimeString('en-IN')}` : ''}
+          </p>
+        </div>
+
+        <div className="stats-grid">
+          <div className="stat-card primary">
+            <div className="stat-value">{stats.totalStudents || 0}</div>
+            <div className="stat-label">Active Students</div>
+            <div className="stat-change">Live</div>
+          </div>
+          <div className="stat-card secondary">
+            <div className="stat-value">{stats.totalFaculty || 0}</div>
+            <div className="stat-label">Active Faculty</div>
+            <div className="stat-change">Live</div>
+          </div>
+          <div className="stat-card warning">
+            <div className="stat-value">{stats.totalCourses || 0}</div>
+            <div className="stat-label">Active Courses</div>
+            <div className="stat-change">Live</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats.pendingRegistrations || 0}</div>
+            <div className="stat-label">Pending Approvals</div>
+            <div className="stat-change">Needs Action</div>
+          </div>
+        </div>
+
+        <div className="dashboard-main">
+          <div className="dashboard-section">
+            <h3>Students By Semester</h3>
+            {semCounts.length === 0 ? (
+              <div className="empty-message">No semester-wise student data available yet.</div>
+            ) : (
+              <div className="semester-bars">
+                {semCounts.map((item) => (
+                  <div key={`sem-${item._id}`} className="semester-bar">
+                    <span className="semester-label">Sem {item._id}</span>
+                    <div className="bar-container">
+                      <div
+                        className="bar-fill"
+                        style={{ width: `${Math.round(((item.count || 0) / maxSemCount) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="student-count">{item.count || 0}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="dashboard-section">
+            <h3>Finance Snapshot</h3>
+            <div className="revenue-stats">
+              <div className="revenue-item">
+                <span className="label">Total Fee Collected</span>
+                <span className="value">INR {(stats.totalFeeCollected || 0).toLocaleString()}</span>
+              </div>
+              <div className="revenue-item">
+                <span className="label">Total Fee Due</span>
+                <span className="value pending">INR {(stats.totalFeeDue || 0).toLocaleString()}</span>
+              </div>
+              <div className="revenue-item">
+                <span className="label">Total Notices</span>
+                <span className="value">{stats.totalNotices || 0}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        <div className="dashboard-section">
+          <h3>Recent Payments</h3>
+          {recentPayments.length === 0 ? (
+            <div className="empty-message">No recent payment activity.</div>
+          ) : (
+            <div className="payments-list">
+              {recentPayments.map((payment, index) => (
+                <div key={payment._id || `payment-${index}`} className="payment-item">
+                  <div className="payment-info">
+                    <span className="student-name">{payment.studentName || 'Student'}</span>
+                  </div>
+                  <span className="payment-amount">INR {(payment.paidAmount || 0).toLocaleString()}</span>
+                  <span className="payment-date">
+                    {payment.lastUpdated ? new Date(payment.lastUpdated).toLocaleDateString('en-IN') : '-'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (loading) return <div className="loading">Initializing Administrator Interface...</div>;
 
@@ -2749,6 +2709,108 @@ function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete {deleteTarget.name}? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button type="button" className="action-button primary" onClick={confirmDelete}>
+                Delete
+              </button>
+              <button type="button" className="action-button secondary" onClick={cancelDelete}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRejectConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Confirm Rejection</h3>
+            <p>Are you sure you want to reject {rejectTarget.name}&apos;s registration? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button type="button" className="action-button primary" onClick={confirmRejectRegistration}>
+                Reject
+              </button>
+              <button type="button" className="action-button secondary" onClick={cancelRejectRegistration}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showProfileModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Reset Admin Details</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleProfileUpdate();
+            }}>
+              <div className="input-group">
+                <label>Admin Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label>Admin Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label>Current Password (leave blank if not changing)</label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={profileForm.currentPassword}
+                  onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                />
+              </div>
+              <div className="input-group">
+                <label>New Password (leave blank if not changing)</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={profileForm.newPassword}
+                  onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })}
+                />
+              </div>
+              <div className="input-group">
+                <label>Confirm New Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={profileForm.confirmPassword}
+                  onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="action-button primary">
+                  Update Profile
+                </button>
+                <button type="button" className="action-button secondary" onClick={() => setShowProfileModal(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

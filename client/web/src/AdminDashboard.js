@@ -56,12 +56,15 @@ function AdminDashboard() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedFee, setSelectedFee] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
+  });
+  const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const defaultSystemSettings = {
     institutionName: 'Bhagwant Institute of Technology',
@@ -1051,27 +1054,10 @@ function AdminDashboard() {
 
   const handleProfileUpdate = async () => {
     try {
-      // Validate passwords match
-      if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-        alert('New passwords do not match');
-        return;
-      }
-
-      if (profileForm.newPassword && !profileForm.currentPassword) {
-        alert('Current password is required to set a new password');
-        return;
-      }
-
       const updateData = {
         name: profileForm.name,
         email: profileForm.email
       };
-
-      // Only include password if it's being changed
-      if (profileForm.newPassword) {
-        updateData.currentPassword = profileForm.currentPassword;
-        updateData.newPassword = profileForm.newPassword;
-      }
 
       const response = await apiCall('/api/admin/profile', {
         method: 'PUT',
@@ -1099,10 +1085,7 @@ function AdminDashboard() {
         setShowProfileModal(false);
         setProfileForm({
           name: updatedName,
-          email: updatedEmail,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
+          email: updatedEmail
         });
       } else {
         alert(data.message || 'Failed to update profile');
@@ -1116,12 +1099,58 @@ function AdminDashboard() {
   const openProfileModal = () => {
     setProfileForm({
       name: adminProfile.name || 'Admin',
-      email: adminProfile.email || 'admin@bit.edu',
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      email: adminProfile.email || 'admin@bit.edu'
     });
     setShowProfileModal(true);
+  };
+
+  const openPasswordModal = () => {
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setShowPasswordModal(true);
+  };
+
+  const handleAdminPasswordUpdate = async () => {
+    try {
+      if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+        alert('Please fill all password fields');
+        return;
+      }
+
+      if (passwordForm.newPassword.length < 8) {
+        alert('New password must be at least 8 characters');
+        return;
+      }
+
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        alert('New password and confirm password do not match');
+        return;
+      }
+
+      const response = await apiCall('/api/admin/password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordForm),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        alert(data.message || 'Admin password updated successfully');
+        setShowPasswordModal(false);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      } else {
+        alert(data.message || `Failed to update admin password (HTTP ${response.status})`);
+      }
+    } catch (error) {
+      console.error('Error updating admin password:', error);
+      alert('Failed to update admin password');
+    }
   };
 
   const handleSaveSystemSettings = () => {
@@ -2655,7 +2684,15 @@ function AdminDashboard() {
                     className="action-button primary"
                     onClick={openProfileModal}
                   >
-                    Reset Admin Details
+                    Edit Admin Profile
+                  </button>
+                </div>
+                <div className="setting-item">
+                  <button 
+                    className="action-button secondary"
+                    onClick={openPasswordModal}
+                  >
+                    Change Admin Password
                   </button>
                 </div>
               </div>
@@ -2747,7 +2784,7 @@ function AdminDashboard() {
       {showProfileModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>Reset Admin Details</h3>
+            <h3>Edit Admin Profile</h3>
             <form onSubmit={(e) => {
               e.preventDefault();
               handleProfileUpdate();
@@ -2772,38 +2809,61 @@ function AdminDashboard() {
                   required
                 />
               </div>
+              <div className="modal-actions">
+                <button type="submit" className="action-button primary">
+                  Update Profile
+                </button>
+                <button type="button" className="action-button secondary" onClick={() => setShowProfileModal(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Change Admin Password</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleAdminPasswordUpdate();
+            }}>
               <div className="input-group">
-                <label>Current Password (leave blank if not changing)</label>
+                <label>Current Password</label>
                 <input
                   type="password"
-                  name="currentPassword"
-                  value={profileForm.currentPassword}
-                  onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  required
                 />
               </div>
               <div className="input-group">
-                <label>New Password (leave blank if not changing)</label>
+                <label>New Password</label>
                 <input
                   type="password"
-                  name="newPassword"
-                  value={profileForm.newPassword}
-                  onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  minLength="8"
+                  required
                 />
               </div>
               <div className="input-group">
                 <label>Confirm New Password</label>
                 <input
                   type="password"
-                  name="confirmPassword"
-                  value={profileForm.confirmPassword}
-                  onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  minLength="8"
+                  required
                 />
               </div>
               <div className="modal-actions">
                 <button type="submit" className="action-button primary">
-                  Update Profile
+                  Update Password
                 </button>
-                <button type="button" className="action-button secondary" onClick={() => setShowProfileModal(false)}>
+                <button type="button" className="action-button secondary" onClick={() => setShowPasswordModal(false)}>
                   Cancel
                 </button>
               </div>

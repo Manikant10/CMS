@@ -60,6 +60,52 @@ router.put('/profile', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// PUT /api/admin/password — Change admin password
+router.put('/password', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'currentPassword, newPassword and confirmPassword are required',
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters',
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password and confirm password do not match',
+      });
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({ success: true, message: 'Admin password updated successfully' });
+  } catch (error) {
+    console.error('Admin password update error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/admin/users — List all users (admin only)
 router.get('/users', protect, authorize('admin'), async (req, res) => {
   try {
